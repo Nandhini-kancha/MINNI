@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Minni AI Safety Companion</title>
+  <title>Minni AI Safety Companion - తెలుగు & English</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -16,11 +16,12 @@
       <div class="header-left">
         <div class="avatar">🌸</div>
         <div>
-          <h2>Minni AI</h2>
-          <p>Safety Assistant for Children & Women</p>
+          <h2>Minni AI / మిన్ని</h2>
+          <p>Safety Assistant for Children & Women (తెలుగు & English)</p>
         </div>
       </div>
       <div class="header-right">
+        <button type="button" id="langBtn" class="btn outline" title="Switch Voice Language">🌐 Voice: <span id="langLabel">English</span></button>
         <button type="button" id="ttsBtn" class="btn outline" title="Voice Output">🔊 Voice On</button>
         <button type="button" id="resetBtn" class="btn outline" title="Clear Chat">🔄 Reset</button>
       </div>
@@ -29,7 +30,7 @@
     <!-- Emergency Banner (Appears only on high risk) -->
     <div id="emergencyBanner" class="emergency-banner hidden">
       <div class="emergency-text">
-        🚨 <strong>EMERGENCY HELP DETECTED</strong>: If you are in danger, please call:
+        🚨 <strong>EMERGENCY HELP DETECTED / అత్యవసర సహాయం</strong>: If you are in danger, please call:
       </div>
       <div class="emergency-links">
         <a href="tel:1098" class="helpline-btn child">Childline 1098</a>
@@ -40,9 +41,9 @@
 
     <!-- Audience Selector -->
     <div class="audience-bar">
-      <span>Who is asking?</span>
-      <button type="button" class="mode-btn active" data-audience="child">👶 Child</button>
-      <button type="button" class="mode-btn" data-audience="woman">👩 Woman</button>
+      <span>Who is asking? / ఎవరు అడుగుతున్నారు?</span>
+      <button type="button" class="mode-btn active" data-audience="child">👶 Child / పిల్లలు</button>
+      <button type="button" class="mode-btn" data-audience="woman">👩 Woman / మహిళలు</button>
       <button type="button" class="mode-btn" data-audience="general">🌐 General</button>
     </div>
 
@@ -51,28 +52,29 @@
       <div class="msg minni">
         <div class="msg-avatar">🌸</div>
         <div class="msg-body">
-          <div class="msg-sender">Minni</div>
+          <div class="msg-sender">Minni / మిన్ని</div>
           <div class="msg-text">
-            Hello! I am Minni. Tap 🎙️ <strong>Record Voice</strong> to speak to me, or type your question!
+            నమస్కారం! నేను <strong>మిన్ని (Minni)</strong>. మీరు తెలుగు లేదా ఇంగ్లీషులో ప్రశ్నలు అడగవచ్చు! (Hello! I am Minni. You can ask questions in Telugu or English!)
           </div>
         </div>
       </div>
     </main>
 
-    <!-- Quick Questions -->
+    <!-- Quick Questions (Bilingual English & Telugu) -->
     <div class="quick-chips">
+      <button type="button" class="chip" data-prompt="మంచి స్పర్శ మరియు చెడు స్పర్శ అంటే ఏమిటి?">మంచి స్పర్శ & చెడు స్పర్శ</button>
+      <button type="button" class="chip" data-prompt="అపరిచితుల నుండి ఎలా సురక్షితంగా ఉండాలి?">అపరిచితుల భద్రత</button>
+      <button type="button" class="chip" data-prompt="ఇంటర్నెట్‌లో ఎలా భద్రంగా ఉండాలి?">ఆన్‌లైన్ భద్రత</button>
+      <button type="button" class="chip" data-prompt="నన్ను ఎవరైనా వేధిస్తే ఏం చేయాలి?">వేధింపుల నివారణ</button>
       <button type="button" class="chip" data-prompt="What is good touch and bad touch?">Good & Bad Touch</button>
-      <button type="button" class="chip" data-prompt="What should I do if a stranger talks to me?">Stranger Safety</button>
-      <button type="button" class="chip" data-prompt="How to stay safe online?">Online Safety</button>
-      <button type="button" class="chip" data-prompt="What to do if someone is bullying me?">Bullying Help</button>
-      <button type="button" class="chip danger" data-prompt="Someone is touching me inappropriately right now help me">Emergency Help 🚨</button>
+      <button type="button" class="chip danger" data-prompt="నన్ను ఎవరో అక్రమంగా తాకుతున్నారు నాకు సహాయం కావాలి">అత్యవసర సహాయం 🚨</button>
     </div>
 
     <!-- Voice Recording Status Overlay -->
     <div id="recordingOverlay" class="recording-overlay hidden">
       <div class="recording-indicator">
         <span class="rec-dot">🔴</span>
-        <span id="recTimer" class="rec-timer">Listening... Speak now!</span>
+        <span id="recTimer" class="rec-timer">Listening... Speak in Telugu or English!</span>
         <div class="sound-wave">
           <span class="wave-bar"></span>
           <span class="wave-bar"></span>
@@ -95,7 +97,7 @@
           <span class="mic-icon">🎙️</span>
           <span class="mic-label">Record Voice</span>
         </button>
-        <input type="text" id="messageInput" placeholder="Type or record voice message..." autocomplete="off" />
+        <input type="text" id="messageInput" placeholder="తెలుగులో లేదా English లో అడగండి (Ask in Telugu or English)..." autocomplete="off" />
         <button type="button" id="sendBtn" class="send-btn">Send ✨</button>
       </form>
     </footer>

@@ -8,6 +8,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const emergencyBanner = document.getElementById("emergencyBanner");
   const resetBtn = document.getElementById("resetBtn");
   const ttsBtn = document.getElementById("ttsBtn");
+  const langBtn = document.getElementById("langBtn");
+  const langLabel = document.getElementById("langLabel");
   const micBtn = document.getElementById("micBtn");
   const modeBtns = document.querySelectorAll(".mode-btn");
   const chips = document.querySelectorAll(".chip");
@@ -17,6 +19,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   let currentAudience = "child";
   let ttsEnabled = true;
+  let currentSpeechLang = "te-IN"; // Default voice language to Telugu
   let isRecording = false;
   let recInterval = null;
   let secondsRecorded = 0;
@@ -28,7 +31,24 @@ document.addEventListener("DOMContentLoaded", () => {
     localStorage.setItem("minni_session_id", sessionId);
   }
 
-  // Prevent any form submission page reloads
+  // Language Toggle (Telugu <-> English)
+  if (langBtn && langLabel) {
+    langBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      if (currentSpeechLang === "te-IN") {
+        currentSpeechLang = "en-US";
+        langLabel.textContent = "English";
+      } else {
+        currentSpeechLang = "te-IN";
+        langLabel.textContent = "తెలుగు";
+      }
+      if (recognition) {
+        recognition.lang = currentSpeechLang;
+      }
+    });
+  }
+
+  // Form Submit Handler
   if (chatForm) {
     chatForm.addEventListener("submit", (e) => {
       e.preventDefault();
@@ -46,7 +66,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Audience selector pills
+  // Audience selector
   modeBtns.forEach((btn) => {
     btn.addEventListener("click", (e) => {
       e.preventDefault();
@@ -87,14 +107,14 @@ document.addEventListener("DOMContentLoaded", () => {
       <div class="msg minni">
         <div class="msg-avatar">🌸</div>
         <div class="msg-body">
-          <div class="msg-sender">Minni</div>
-          <div class="msg-text">Session restarted! Tap 🎙️ <strong>Record Voice</strong> to speak to me!</div>
+          <div class="msg-sender">Minni / మిన్ని</div>
+          <div class="msg-text">Session restarted! తెలుగులో లేదా English లో ప్రశ్నించండి (Ask in Telugu or English)!</div>
         </div>
       </div>
     `;
   });
 
-  // Speech Recognition (Voice Recording)
+  // Speech Recognition (Telugu & English STT)
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
   let recognition = null;
 
@@ -102,14 +122,14 @@ document.addEventListener("DOMContentLoaded", () => {
     recognition = new SpeechRecognition();
     recognition.continuous = false;
     recognition.interimResults = true;
-    recognition.lang = "en-US";
+    recognition.lang = currentSpeechLang;
 
     recognition.onstart = () => {
       isRecording = true;
       micBtn.classList.add("active");
       recordingOverlay.classList.remove("hidden");
       secondsRecorded = 0;
-      recTimer.textContent = "Listening... Speak now!";
+      recTimer.textContent = currentSpeechLang === "te-IN" ? "వినబడుతోంది... తెలుగులో మాట్లాడండి!" : "Listening... Speak in English!";
 
       clearInterval(recInterval);
       recInterval = setInterval(() => {
@@ -131,9 +151,6 @@ document.addEventListener("DOMContentLoaded", () => {
       micBtn.classList.remove("active");
       recordingOverlay.classList.add("hidden");
       clearInterval(recInterval);
-      if (event.error === "not-allowed") {
-        alert("Microphone permission was blocked. Please allow microphone access in your browser settings to use voice recording.");
-      }
     };
 
     recognition.onresult = (e) => {
@@ -154,6 +171,7 @@ document.addEventListener("DOMContentLoaded", () => {
       } else {
         try {
           messageInput.value = "";
+          recognition.lang = currentSpeechLang;
           recognition.start();
         } catch (err) {
           console.warn("Speech recognition error:", err);
@@ -175,11 +193,6 @@ document.addEventListener("DOMContentLoaded", () => {
         }, 300);
       });
     }
-  } else {
-    micBtn.addEventListener("click", (e) => {
-      e.preventDefault();
-      alert("Voice recording is supported in Google Chrome, Microsoft Edge, and Safari. Please use one of these browsers for voice input!");
-    });
   }
 
   // Send Message Logic
@@ -222,7 +235,7 @@ document.addEventListener("DOMContentLoaded", () => {
     } catch (err) {
       console.error("Chat Error:", err);
       typing.classList.add("hidden");
-      appendMsg("Minni", "I am here to help you stay safe! If you ever feel in danger, please call **112 / 1098** immediately.", false);
+      appendMsg("Minni", "నేను మీకు సహాయం చేయడానికి ఇక్కడ ఉన్నాను. అత్యవసర పరిస్థితి ఉంటే 112 / 1098 కి కాల్ చేయండి.", false);
     }
   }
 
@@ -242,14 +255,19 @@ document.addEventListener("DOMContentLoaded", () => {
     chatMessages.scrollTop = chatMessages.scrollHeight;
   }
 
-  // Helper to speak text aloud
+  // Helper to speak text aloud in Telugu or English
   function speakText(text) {
     if (!window.speechSynthesis) return;
     try {
       window.speechSynthesis.cancel();
       const clean = String(text || "").replace(/\*\*/g, "");
       const u = new SpeechSynthesisUtterance(clean);
+      
+      // Auto-detect Telugu characters
+      const isTeluguText = /[\u0c00-\u0c7f]/.test(text);
+      u.lang = isTeluguText ? "te-IN" : "en-US";
       u.rate = 0.95;
+
       window.speechSynthesis.speak(u);
     } catch (e) {
       console.warn("Speech synthesis notice:", e);
