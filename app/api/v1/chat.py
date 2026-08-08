@@ -1,3 +1,4 @@
+import re
 import logging
 from fastapi import APIRouter, HTTPException, status
 from app.schemas.chat import ChatRequest, ChatResponse
@@ -9,23 +10,36 @@ logger = logging.getLogger("minni.api.chat")
 router = APIRouter(tags=["Chatbot"])
 
 
+def strip_wake_word(message: str) -> str:
+    """Strips leading wake words ('Hey Minni', 'Hi Minni', 'Hello Minni', 'Minni,') from user speech input."""
+    cleaned = message.strip()
+    # Remove 'Hey Minni', 'Hi Minni', 'Hello Minni' prefix
+    cleaned = re.sub(r"^(hey|hi|hello)\s+minni[,!\s]*", "", cleaned, flags=re.IGNORECASE).strip()
+    # Remove standalone 'Minni,' or 'Minni ' prefix
+    cleaned = re.sub(r"^minni[,!\s]+", "", cleaned, flags=re.IGNORECASE).strip()
+    return cleaned if cleaned else message.strip()
+
+
 @router.post(
     "/chat",
     response_model=ChatResponse,
     status_code=status.HTTP_200_OK,
-    summary="Minni AI Chatbot Endpoint",
+    summary="Minni Robot Chat Endpoint",
     description=(
-        "Main conversational endpoint for Minni AI Safety Assistant.\n\n"
-        "- Processes user input through a pre-generation Safety & Intent Classification layer.\n"
+        "Conversational API endpoint for Robot integration.\n\n"
+        "- Expects text input transcribed from robot speech after wake word 'Hey Minni' is detected.\n"
+        "- Automatically cleans leading wake words ('Hey Minni', 'Hi Minni').\n"
+        "- Pre-evaluates messages through Safety & Intent classification layer.\n"
         "- High-risk inputs (abuse, self-harm, immediate danger) trigger instant pre-defined safe responses with helpline numbers.\n"
-        "- Standard queries receive age-appropriate, empathetic Gemini AI responses.\n"
         "- Context is preserved per `session_id`."
     )
 )
 async def chat_endpoint(payload: ChatRequest) -> ChatResponse:
-    """Processes user text and generates Minni safety response."""
+    """Processes user text from robot STT and generates Minni safety response."""
     try:
-        user_message = payload.message.strip()
+        raw_message = payload.message.strip()
+        # Clean wake word if present in transcribed speech
+        user_message = strip_wake_word(raw_message)
         audience = payload.audience or "general"
 
         # 1. Resolve or generate session ID
@@ -42,7 +56,6 @@ async def chat_endpoint(payload: ChatRequest) -> ChatResponse:
             response_text = emergency_response
             helpline_info = safety_service.HELPLINE_SUMMARY
 
-            # Log safety event
             logger.warning(f"High risk trigger detected in session {session_id} [Intent: {intent}]")
 
             # Save emergency turn to session history

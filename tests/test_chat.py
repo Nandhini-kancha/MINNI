@@ -22,6 +22,18 @@ def test_post_chat_normal_query():
     assert data["action_taken"] == "normal_response"
 
 
+def test_post_chat_wake_word_stripping():
+    """Test POST /api/chat strips 'Hey Minni' wake word prefix from robot input."""
+    payload = {
+        "message": "Hey Minni, what is a bad touch?",
+        "audience": "child"
+    }
+    response = client.post("/api/chat", json=payload)
+    assert response.status_code == 200
+    data = response.json()
+    assert data["intent"] == "body_safety"
+
+
 def test_post_chat_high_risk_emergency_query():
     """Test POST /api/chat with a high-risk emergency query triggering immediate safe response."""
     payload = {
