@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Minni 🌸 - AI Safety Companion</title>
+  <meta name="description" content="Minni is a friendly, supportive AI safety companion for children and women." />
+  
+  <!-- Google Fonts: Outfit & Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="/static/css/styles.css" />
+</head>
+<body class="theme-light">
+  <div class="app-background"></div>
+
+  <main class="chat-container">
+    <!-- Header Bar -->
+    <header class="chat-header">
+      <div class="brand">
+        <div class="avatar-badge">
+          <span class="avatar-emoji">🌸</span>
+          <span class="status-dot online"></span>
+        </div>
+        <div class="brand-info">
+          <h1>Minni</h1>
+          <p class="subtitle">AI Safety Companion for Children & Women</p>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <button id="ttsToggleBtn" class="icon-btn active" title="Toggle Text-to-Speech (Voice Output)">
+          <span class="btn-icon">🔊</span>
+          <span class="btn-text">Voice On</span>
+        </button>
+        <button id="resetChatBtn" class="icon-btn" title="Reset Session Chat">
+          <span class="btn-icon">🔄</span>
+          <span class="btn-text">New Chat</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Emergency Helpline Banner (Hidden by default) -->
+    <div id="emergencyBanner" class="emergency-banner hidden">
+      <div class="emergency-content">
+        <div class="emergency-title">
+          <span class="alert-pulse">🚨</span>
+          <strong>HIGH RISK / EMERGENCY SUPPORT DETECTED</strong>
+        </div>
+        <p>If you or someone you know is in immediate danger, please reach out to official helplines right now:</p>
+        <div class="helpline-buttons">
+          <a href="tel:1098" class="helpline-chip child">📞 1098 Childline</a>
+          <a href="tel:181" class="helpline-chip woman">📞 181 Women Helpline</a>
+          <a href="tel:112" class="helpline-chip emergency">📞 112 / 911 Emergency</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Audience Mode Selector Pills -->
+    <div class="audience-selector">
+      <span class="selector-label">Mode:</span>
+      <div class="audience-pills">
+        <button class="pill-btn active" data-audience="child">👶 Child Mode</button>
+        <button class="pill-btn" data-audience="woman">👩 Woman Mode</button>
+        <button class="pill-btn" data-audience="general">🌐 General</button>
+      </div>
+    </div>
+
+    <!-- Chat Messages Window -->
+    <section id="chatMessages" class="chat-messages" aria-live="polite">
+      <!-- Welcome Message -->
+      <div class="message-wrapper minni-message">
+        <div class="message-avatar">🌸</div>
+        <div class="message-bubble">
+          <div class="message-sender">Minni</div>
+          <div class="message-text">
+            Hello! I am **Minni**, your friendly AI safety companion. 😊<br><br>
+            I am here to answer any questions about **body safety**, **personal boundaries**, **stranger safety**, **online safety**, or **bullying**. You are always safe here and you can ask me anything!
+          </div>
+          <span class="message-time">Just now</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Quick Safety Prompt Chips -->
+    <div class="quick-prompts-wrapper">
+      <div class="quick-prompts" id="quickPrompts">
+        <button class="prompt-chip" data-prompt="What is good touch vs bad touch?">🌸 Good touch vs Bad touch</button>
+        <button class="prompt-chip" data-prompt="What should I do if a stranger offers me a car ride?">🚶 Stranger safety rules</button>
+        <button class="prompt-chip" data-prompt="Is it okay to share my password with online friends?">📱 Online safety rules</button>
+        <button class="prompt-chip" data-prompt="Someone is being mean and bullying me at school. What should I do?">🛑 Bullying help</button>
+        <button class="prompt-chip danger" data-prompt="Someone is touching me inappropriately right now help me">🆘 Emergency help</button>
+      </div>
+    </div>
+
+    <!-- Typing Indicator -->
+    <div id="typingIndicator" class="typing-indicator hidden">
+      <div class="message-avatar">🌸</div>
+      <div class="typing-bubble">
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="typing-text">Minni is thinking...</span>
+      </div>
+    </div>
+
+    <!-- Input Footer -->
+    <footer class="chat-input-area">
+      <form id="chatForm" class="chat-form">
+        <button type="button" id="micBtn" class="mic-btn" title="Speak to Minni (Voice Input)">
+          <span class="mic-icon">🎙️</span>
+        </button>
+        <input 
+          type="text" 
+          id="messageInput" 
+          class="message-input" 
+          placeholder="Ask Minni anything about body safety, boundaries, or online rules..." 
+          autocomplete="off"
+          maxlength="1000"
+          required
+        />
+        <button type="submit" id="sendBtn" class="send-btn" title="Send Message">
+          <span>Send</span>
+          <span class="send-icon">✨</span>
+        </button>
+      </form>
+      <div class="privacy-note">
+        🔒 Minni never stores personal information. Always talk to a trusted adult if you feel unsafe.
+      </div>
+    </footer>
+  </main>
+
+  <!-- JavaScript -->
+  <script src="/static/js/app.js"></script>
+</body>
+</html>
