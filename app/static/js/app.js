@@ -8,31 +8,43 @@ document.addEventListener("DOMContentLoaded", () => {
   const resetChatBtn = document.getElementById("resetChatBtn");
   const ttsToggleBtn = document.getElementById("ttsToggleBtn");
   const micBtn = document.getElementById("micBtn");
-  const quickPrompts = document.getElementById("quickPrompts");
-  const audiencePills = document.querySelectorAll(".audience-pills .pill-btn");
+  const topicGrid = document.getElementById("topicGrid");
+  const modeBtns = document.querySelectorAll(".mode-pills .mode-btn");
+  const ruleModalBtn = document.getElementById("ruleModalBtn");
+  const ruleModal = document.getElementById("ruleModal");
+  const closeModalBtn = document.getElementById("closeModalBtn");
 
   // State Management
   let currentAudience = "child";
   let ttsEnabled = true;
   let isRecording = false;
 
-  // Session ID persistence
+  // Session Persistence
   let sessionId = localStorage.getItem("minni_session_id");
   if (!sessionId) {
     sessionId = "session-" + Math.random().toString(36).substring(2, 10);
     localStorage.setItem("minni_session_id", sessionId);
   }
 
-  // Audience selector pills event listener
-  audiencePills.forEach((btn) => {
+  // Safety Rules Modal Toggle
+  if (ruleModalBtn && ruleModal && closeModalBtn) {
+    ruleModalBtn.addEventListener("click", () => ruleModal.classList.remove("hidden"));
+    closeModalBtn.addEventListener("click", () => ruleModal.classList.add("hidden"));
+    ruleModal.addEventListener("click", (e) => {
+      if (e.target === ruleModal) ruleModal.classList.add("hidden");
+    });
+  }
+
+  // Mode Selection Pills
+  modeBtns.forEach((btn) => {
     btn.addEventListener("click", () => {
-      audiencePills.forEach((b) => b.classList.remove("active"));
+      modeBtns.forEach((b) => b.classList.remove("active"));
       btn.classList.add("active");
       currentAudience = btn.getAttribute("data-audience");
     });
   });
 
-  // Text-To-Speech (TTS) Toggle
+  // Auto Read-Aloud Toggle
   ttsToggleBtn.addEventListener("click", () => {
     ttsEnabled = !ttsEnabled;
     if (ttsEnabled) {
@@ -45,7 +57,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // Speech Recognition (STT) Setup
+  // Speech Recognition (STT) setup
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
   let recognition = null;
 
@@ -58,13 +70,13 @@ document.addEventListener("DOMContentLoaded", () => {
     recognition.onstart = () => {
       isRecording = true;
       micBtn.classList.add("recording");
-      messageInput.placeholder = "Listening... Speak now!";
+      messageInput.placeholder = "Listening... Speak now! 🎙️";
     };
 
     recognition.onend = () => {
       isRecording = false;
       micBtn.classList.remove("recording");
-      messageInput.placeholder = "Ask Minni anything about body safety, boundaries, or online rules...";
+      messageInput.placeholder = "Type your question or tap microphone to speak...";
     };
 
     recognition.onresult = (event) => {
@@ -84,28 +96,38 @@ document.addEventListener("DOMContentLoaded", () => {
     micBtn.style.display = "none";
   }
 
-  // Quick Prompt Chips Click Handler
-  quickPrompts.addEventListener("click", (e) => {
-    if (e.target.classList.contains("prompt-chip")) {
-      const promptText = e.target.getAttribute("data-prompt");
-      messageInput.value = promptText;
-      chatForm.dispatchEvent(new Event("submit"));
+  // Topic Cards Click Listener
+  if (topicGrid) {
+    topicGrid.addEventListener("click", (e) => {
+      const card = e.target.closest(".topic-card");
+      if (card) {
+        const promptText = card.getAttribute("data-prompt");
+        messageInput.value = promptText;
+        chatForm.dispatchEvent(new Event("submit"));
+      }
+    });
+  }
+
+  // Delegated Click for Per-Message Audio Playback
+  chatMessages.addEventListener("click", (e) => {
+    if (e.target.classList.contains("speak-msg-btn")) {
+      const bubble = e.target.closest(".message-bubble");
+      const textContent = bubble.querySelector(".message-text").innerText;
+      speakText(textContent);
     }
   });
 
   // Reset Chat Session Handler
   resetChatBtn.addEventListener("click", async () => {
-    if (confirm("Clear conversation history and start a new chat?")) {
+    if (confirm("Start a new chat session with Minni?")) {
       try {
         await fetch(`/api/chat/session/${sessionId}`, { method: "DELETE" });
       } catch (err) {
         console.warn("Session reset API error:", err);
       }
-      // Generate new session ID
       sessionId = "session-" + Math.random().toString(36).substring(2, 10);
       localStorage.setItem("minni_session_id", sessionId);
 
-      // Reset UI
       emergencyBanner.classList.add("hidden");
       chatMessages.innerHTML = `
         <div class="message-wrapper minni-message">
@@ -113,8 +135,11 @@ document.addEventListener("DOMContentLoaded", () => {
           <div class="message-bubble">
             <div class="message-sender">Minni</div>
             <div class="message-text">
-              Hello! I am **Minni**, your friendly AI safety companion. 😊<br><br>
-              Session restarted! I am here to answer your questions about **body safety**, **personal boundaries**, or **online safety**.
+              Hi! I'm <strong>Minni</strong>, your safety buddy! 💖<br><br>
+              Session restarted! I am here to answer any questions about <strong>body safety</strong>, <strong>strangers</strong>, or <strong>online safety</strong>!
+            </div>
+            <div class="bubble-actions">
+              <button class="speak-msg-btn" title="Listen to message">🔊 Listen</button>
             </div>
             <span class="message-time">Just now</span>
           </div>
@@ -126,20 +151,19 @@ document.addEventListener("DOMContentLoaded", () => {
   // Form Submit Handler
   chatForm.addEventListener("submit", async (e) => {
     e.preventDefault();
-    const userText = messageInput.value.strip ? messageInput.value.strip() : messageInput.value.trim();
+    const userText = messageInput.value.trim();
     if (!userText) return;
 
-    // Clear input
     messageInput.value = "";
+    playSoftChime(440); // Soft send chime
 
-    // Render User Message
+    // Append User Message
     appendMessage({
       sender: "You",
       text: userText,
       isUser: true
     });
 
-    // Show Typing Indicator
     showTyping(true);
 
     try {
@@ -159,8 +183,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const data = await response.json();
       showTyping(false);
+      playSoftChime(660); // Soft receive chime
 
-      // Render Minni Response
+      // Append Minni Response
       appendMessage({
         sender: "Minni",
         text: data.response,
@@ -174,7 +199,7 @@ document.addEventListener("DOMContentLoaded", () => {
         emergencyBanner.classList.remove("hidden");
       }
 
-      // Speak Response via TTS if enabled
+      // Auto Read-Aloud if enabled
       if (ttsEnabled && data.response) {
         speakText(data.response);
       }
@@ -184,28 +209,26 @@ document.addEventListener("DOMContentLoaded", () => {
       console.error("Chat API Error:", error);
       appendMessage({
         sender: "Minni",
-        text: "I am having trouble connecting right now, but please remember: if you ever feel unsafe or need help, reach out to a trusted adult or call **112 / 1098** immediately!",
+        text: "I am having trouble connecting right now, but please remember: if you ever feel unsafe or need help, tell a trusted adult or call **112 / 1098** immediately!",
         isUser: false,
         riskLevel: "HIGH_RISK"
       });
     }
   });
 
-  // Helper: Format Markdown bold and newlines
+  // Helper: Format Markdown bold & newlines
   function formatMarkdown(text) {
     let formatted = text
       .replace(/&/g, "&amp;")
       .replace(/</g, "&lt;")
       .replace(/>/g, "&gt;");
-    
-    // Convert **bold** to <strong>bold</strong>
+
     formatted = formatted.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
-    // Convert line breaks to <br>
     formatted = formatted.replace(/\n/g, "<br>");
     return formatted;
   }
 
-  // Helper: Append Message Bubble to DOM
+  // Helper: Append Message Bubble
   function appendMessage({ sender, text, isUser, riskLevel, intent }) {
     const wrapper = document.createElement("div");
     wrapper.className = `message-wrapper ${isUser ? "user-message" : "minni-message"}`;
@@ -224,17 +247,23 @@ document.addEventListener("DOMContentLoaded", () => {
     const textDiv = document.createElement("div");
     textDiv.className = "message-text";
 
-    // Add Risk Tag if present for Minni
     if (!isUser && riskLevel && riskLevel !== "SAFE") {
       const badge = document.createElement("span");
       badge.className = `badge-tag ${riskLevel}`;
-      badge.textContent = riskLevel === "HIGH_RISK" ? "🚨 Emergency Safety Notice" : "🛡️ Sensitive Safety Response";
+      badge.textContent = riskLevel === "HIGH_RISK" ? "🚨 Emergency Safety Notice" : "🛡️ Body Safety Guidance";
       textDiv.appendChild(badge);
     }
 
     const contentDiv = document.createElement("div");
     contentDiv.innerHTML = formatMarkdown(text);
     textDiv.appendChild(contentDiv);
+
+    if (!isUser) {
+      const actionsDiv = document.createElement("div");
+      actionsDiv.className = "bubble-actions";
+      actionsDiv.innerHTML = `<button class="speak-msg-btn" title="Listen to message">🔊 Listen</button>`;
+      textDiv.appendChild(actionsDiv);
+    }
 
     const timeSpan = document.createElement("span");
     timeSpan.className = "message-time";
@@ -262,18 +291,39 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // Helper: Speak text using Web Speech API
+  // Helper: Play Gentle Synthesized Audio Chime
+  function playSoftChime(freq) {
+    try {
+      const AudioContext = window.AudioContext || window.webkitAudioContext;
+      if (!AudioContext) return;
+      const ctx = new AudioContext();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(freq, ctx.currentTime);
+      gain.gain.setValueAtTime(0.05, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.3);
+    } catch (e) {
+      // Audio context policy fallback
+    }
+  }
+
+  // Helper: Speak Text via Web Speech API
   function speakText(rawText) {
     if (!window.speechSynthesis) return;
 
     window.speechSynthesis.cancel(); // Stop ongoing speech
 
-    // Clean Markdown symbols before speaking
+    // Clean Markdown formatting before speaking
     const cleanText = rawText.replace(/\*\*/g, "").replace(/#/g, "").replace(/\[.*?\]\(.*?\)/g, "");
 
     const utterance = new SpeechSynthesisUtterance(cleanText);
-    utterance.rate = 0.95; // Slightly slower, gentle pace for children
-    utterance.pitch = 1.1;  // Slightly warmer pitch
+    utterance.rate = 0.92; // Slightly slower, reassuring pace for children
+    utterance.pitch = 1.15; // Friendly warm pitch
 
     window.speechSynthesis.speak(utterance);
   }
