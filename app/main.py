@@ -1,9 +1,6 @@
 import logging
-import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
 from app.core.config import settings
 from app.api.router import api_router
 
@@ -41,21 +38,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Mount static files directory if it exists
-static_dir = os.path.join(os.path.dirname(__file__), "static")
-if os.path.exists(static_dir):
-    app.mount("/static", StaticFiles(directory=static_dir), name="static")
-
 # Register API Router (/api/chat, /api/health)
 app.include_router(api_router)
 
 
 @app.get("/", include_in_schema=False)
-async def serve_frontend():
-    """Serve the Minni Web Chat Frontend UI."""
-    index_file = os.path.join(static_dir, "index.html")
-    if os.path.exists(index_file):
-        return FileResponse(index_file)
+async def root():
+    """Root redirect / welcome API status."""
     return {
         "app": settings.APP_NAME,
         "version": settings.APP_VERSION,
@@ -63,4 +52,3 @@ async def serve_frontend():
         "health": "/api/health",
         "chat_endpoint": "/api/chat"
     }
-

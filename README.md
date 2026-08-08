@@ -1,17 +1,20 @@
-# Minni 🌸 - AI Safety Companion (Web & API)
+# Minni 🌸 - AI Safety Assistant Chatbot API
 
-**Minni** is a friendly, supportive, age-appropriate AI safety companion API & Web Application built with **FastAPI**, **Google Gemini**, and a **Rich Web UI**. Minni is designed specifically to help **children and women** navigate body safety, personal space, stranger safety, bullying, online privacy, and unsafe situations in a gentle, empowering, and non-judgmental way.
+**Minni** is a friendly, supportive, age-appropriate AI safety assistant Python FastAPI chatbot API powered by **Google Gemini**. Minni is designed specifically to help **children and women** navigate body safety, personal space, stranger safety, bullying, online privacy, and unsafe situations in a gentle, empowering, and non-judgmental way.
 
 ---
 
 ## 🌟 Key Features
 
-- **🌐 Rich Web Chat UI**: Built with glassmorphism aesthetics, responsive layouts, mode switches (Child / Woman / General), and safety prompt chips.
-- **🎙️ Voice Input & Output**: Built-in Speech-to-Text (Voice Mic input) and Text-to-Speech (Minni speaking answers aloud) via Web Speech API.
 - **🛡️ Pre-Generation Safety Layer**: Analyzes user input intent and assesses risk levels (`SAFE`, `SENSITIVE`, `HIGH_RISK`) before generating responses.
 - **🚨 Immediate Emergency Interception**: High-risk situations (active abuse, violence, immediate danger, self-harm) bypass LLM generation to immediately return pre-defined, supportive safe responses with official helpline numbers (**1098 Childline**, **181 Women Helpline**, **112/911 Emergency Services**).
-- **🤖 Powered by Google Gemini**: Leverages Google Gemini for natural, warm, conversational, age-appropriate guidance.
-- **☁️ Netlify & Cloud Ready**: Complete deployment configuration (`netlify.toml`, `mangum` adapter, `Dockerfile`, `render.yaml`).
+- **🤖 Powered by Google Gemini**: Leverages Google Gemini for natural, warm, conversational, age-appropriate guidance in English, Telugu, and Romanized Teluglish.
+- **🔒 Privacy First & No Secrets Principle**:
+  - Never collects unnecessary personal information (full names, addresses, phone numbers).
+  - Emphasizes that secrets about touching or safety are **never okay** to keep and encourages speaking to a trusted adult.
+- **💬 Session Context**: Tracks multi-turn conversation history per `session_id`.
+- **🤖 Robot Ready API**: Pure, lightweight REST interface (`POST /api/chat`) tailored for speech-to-text / text-to-speech robot integration (`"Hey Minni"` ➔ STT ➔ `POST /api/chat` ➔ TTS ➔ Robot Speaks).
+- **📚 Interactive OpenAPI / Swagger Docs**: Available out-of-the-box via FastAPI at `/docs` and `/redoc`.
 
 ---
 
@@ -19,19 +22,11 @@
 
 ```
 minni/
-├── netlify.toml                 # Netlify build and serverless function configuration
-├── netlify/
-│   └── functions/
-│       └── api.py               # Mangum handler for Netlify Serverless Functions
 ├── Dockerfile                   # Production Docker container setup
 ├── Procfile                     # Process configuration for Railway / Heroku
 ├── render.yaml                  # Render.com automatic deployment blueprint
 ├── app/
-│   ├── main.py                  # FastAPI entry point, CORS & static files serving
-│   ├── static/                  # Web Chat UI Assets
-│   │   ├── index.html           # Main Web UI markup
-│   │   ├── css/styles.css       # Glassmorphism design system
-│   │   └── js/app.js            # Chat UI logic, TTS, STT, session manager
+│   ├── main.py                  # FastAPI entry point & CORS configuration
 │   ├── core/
 │   │   ├── config.py            # Settings & environment variables
 │   │   └── system_prompts.py    # Minni persona & safety principles
@@ -53,77 +48,100 @@ minni/
 ├── .env.example                 # Environment variables template
 ├── .env                         # Local environment file
 ├── requirements.txt             # Python dependencies
-└── README.md                    # Documentation & deployment guide
+└── README.md                    # Project documentation
 ```
 
 ---
 
-## 🚀 Running Locally
+## 🚀 Running the Server Locally
 
+### 1. Setup Environment
 ```bash
 cd minni
+python -m venv venv
 
-# Activate virtual environment
+# Windows
 .\venv\Scripts\activate
 
-# Start server
+# Install dependencies
+pip install -r requirements.txt
+```
+
+### 2. Configure API Key
+Copy `.env.example` to `.env` and set your `GEMINI_API_KEY`:
+```env
+GEMINI_API_KEY=your_actual_gemini_api_key_here
+GEMINI_MODEL=gemini-1.5-flash
+```
+
+### 3. Start Uvicorn Server
+```bash
 uvicorn app.main:app --reload
 ```
 
-- **Live Web Chat UI**: [http://127.0.0.1:8000/](http://127.0.0.1:8000/)
 - **Interactive Swagger Docs**: [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)
+- **ReDoc API Documentation**: [http://127.0.0.1:8000/redoc](http://127.0.0.1:8000/redoc)
+- **Chat Endpoint**: `POST /api/chat`
 - **Health Endpoint**: `GET /api/health`
 
 ---
 
-## ☁️ Deploying on Netlify (Step-by-Step)
+## 📡 API Usage Example
 
-### Option 1: Deploying via Netlify CLI (Recommended for instant setup)
+### `POST /api/chat`
 
-1. **Install Netlify CLI**:
-   ```bash
-   npm install -g netlify-cli
-   ```
+**Request Payload:**
+```json
+{
+  "message": "What is good touch and bad touch?",
+  "session_id": "session-child-101",
+  "audience": "child"
+}
+```
 
-2. **Login to Netlify**:
-   ```bash
-   netlify login
-   ```
-
-3. **Deploy the Site**:
-   ```bash
-   netlify deploy --prod
-   ```
-   - When asked for publish directory: enter `app/static`
-   - When asked for build command: enter `pip install -r requirements.txt`
-
-4. **Add your Gemini API Key in Netlify Dashboard**:
-   - Open your site dashboard on Netlify.
-   - Go to **Site Configuration** ➔ **Environment variables**.
-   - Add variable: `GEMINI_API_KEY` = `your_gemini_api_key_here`.
-
----
-
-### Option 2: Deploying via GitHub & Netlify Dashboard
-
-1. Push your `minni` project folder to GitHub.
-2. Log into [Netlify](https://app.netlify.com/).
-3. Click **Add new site** ➔ **Import an existing project** ➔ Select **GitHub**.
-4. Select your `minni` repository.
-5. Netlify will automatically detect `netlify.toml`.
-6. Add `GEMINI_API_KEY` under **Environment variables**.
-7. Click **Deploy Minni**! Your site will be live on `https://<your-site-name>.netlify.app`.
+**Response Payload (`200 OK`):**
+```json
+{
+  "response": "Hi there! Remember, your body belongs to YOU and you have the right to feel safe all the time...\n\nIf anyone ever tries to touch your private parts:\n1. Say NO!\n2. GO AWAY / RUN to a safe place.\n3. TELL a trusted adult immediately!",
+  "session_id": "session-child-101",
+  "intent": "body_safety",
+  "risk_level": "SENSITIVE",
+  "flagged": false,
+  "action_taken": "normal_response",
+  "helpline_info": null
+}
+```
 
 ---
 
-## 🐳 Alternative Deployment Options
+## 🤖 Robot Integration Flow
 
-- **Render**: Connect repository to Render. It will read `render.yaml` automatically.
-- **Docker**:
-  ```bash
-  docker build -t minni-app .
-  docker run -p 8000:8000 -e GEMINI_API_KEY="your_key" minni-app
-  ```
+```
+                      +-------------------+
+                      |   "Hey Minni!"    |
+                      +---------+---------+
+                                |
+                                v
+                      +-------------------+
+                      | Speech-To-Text    |
+                      +---------+---------+
+                                |
+                                v (HTTP POST /api/chat)
+                      +-------------------+
+                      |   Minni FastAPI   |
+                      |   Backend API     |
+                      +---------+---------+
+                                |
+                                v (JSON Response)
+                      +-------------------+
+                      | Text-To-Speech    |
+                      +---------+---------+
+                                |
+                                v
+                      +-------------------+
+                      | Robot Speaks Text |
+                      +-------------------+
+```
 
 ---
 

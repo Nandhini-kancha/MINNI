@@ -16,9 +16,10 @@ def test_health_endpoint():
 
 
 def test_root_endpoint():
-    """Test root endpoint returns web frontend HTML."""
+    """Test root endpoint redirect/welcome dictionary."""
     response = client.get("/")
     assert response.status_code == 200
-    assert "<!DOCTYPE html>" in response.text
-    assert "Minni" in response.text
-
+    data = response.json()
+    assert data["docs"] == "/docs"
+    assert data["health"] == "/api/health"
+    assert data["chat_endpoint"] == "/api/chat"
