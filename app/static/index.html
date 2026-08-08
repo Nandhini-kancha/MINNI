@@ -3,242 +3,86 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Minni 🌸 - Friendly AI Safety Friend for Kids & Women</title>
-  <meta name="description" content="Minni is a friendly, warm, kid-safe AI companion helping children and women learn body safety, personal boundaries, and online rules." />
-  
-  <!-- Google Fonts: Fredoka (Super kid-friendly & bubbly) + Outfit -->
+  <title>Minni AI Safety Companion</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Outfit:wght@500;600;700&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet">
-  
-  <!-- Stylesheet -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/static/css/styles.css" />
 </head>
-<body class="kid-theme">
-  <div class="cloud-bg">
-    <div class="cloud cloud-1">☁️</div>
-    <div class="cloud cloud-2">☁️</div>
-    <div class="cloud cloud-3">✨</div>
-    <div class="cloud cloud-4">🌈</div>
-  </div>
-
-  <main class="chat-container">
-    <!-- Playful Header -->
-    <header class="chat-header">
-      <div class="brand">
-        <div class="avatar-badge bounce">
-          <span class="avatar-emoji">🌸</span>
-          <span class="status-dot online"></span>
-        </div>
-        <div class="brand-info">
-          <h1>Minni Safety Friend 💖</h1>
-          <p class="subtitle">Always here to listen & help you stay safe!</p>
+<body>
+  <div class="chat-app">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="header-left">
+        <div class="avatar">🌸</div>
+        <div>
+          <h2>Minni AI</h2>
+          <p>Safety Assistant for Children & Women</p>
         </div>
       </div>
-
-      <div class="header-actions">
-        <button id="ruleModalBtn" class="kid-btn yellow" title="Minni's 3-Step Safety Rule">
-          <span>🛡️ Safety Rules</span>
-        </button>
-        <button id="ttsToggleBtn" class="kid-btn purple active" title="Toggle Auto Read-Aloud">
-          <span class="btn-icon">🔊</span>
-          <span class="btn-text">Voice On</span>
-        </button>
-        <button id="resetChatBtn" class="kid-btn pink" title="Start a fresh chat">
-          <span class="btn-icon">🔄</span>
-          <span class="btn-text">New Chat</span>
-        </button>
+      <div class="header-right">
+        <button id="ttsBtn" class="btn outline" title="Voice Output">🔊 Voice On</button>
+        <button id="resetBtn" class="btn outline" title="Clear Chat">🔄 Reset</button>
       </div>
     </header>
 
-    <!-- Emergency Helpline Banner -->
+    <!-- Emergency Banner (Appears only on high risk) -->
     <div id="emergencyBanner" class="emergency-banner hidden">
-      <div class="emergency-content">
-        <div class="emergency-header">
-          <span class="siren-pulse">🚨</span>
-          <h3>IMMEDIATE HELP & EMERGENCY HELPLINES</h3>
-        </div>
-        <p>If you feel scared, unsafe, or in danger, please click one of these buttons to call for help right now:</p>
-        <div class="helpline-grid">
-          <a href="tel:1098" class="call-btn child">
-            <span class="btn-emoji">📞</span>
-            <span class="btn-label">Child Helpline<br><strong>1098</strong></span>
-          </a>
-          <a href="tel:181" class="call-btn woman">
-            <span class="btn-emoji">👩</span>
-            <span class="btn-label">Women Helpline<br><strong>181</strong></span>
-          </a>
-          <a href="tel:112" class="call-btn emergency">
-            <span class="btn-emoji">🚨</span>
-            <span class="btn-label">Emergency Police<br><strong>112 / 911</strong></span>
-          </a>
-        </div>
+      <div class="emergency-text">
+        🚨 <strong>EMERGENCY HELP DETECTED</strong>: If you are in danger, please call:
+      </div>
+      <div class="emergency-links">
+        <a href="tel:1098" class="helpline-btn child">Childline 1098</a>
+        <a href="tel:181" class="helpline-btn woman">Women Helpline 181</a>
+        <a href="tel:112" class="helpline-btn police">Police 112 / 911</a>
       </div>
     </div>
 
-    <!-- Mode Selector Cards -->
-    <div class="mode-bar">
-      <span class="mode-title">Who is talking to Minni?</span>
-      <div class="mode-pills">
-        <button class="mode-btn active" data-audience="child">
-          <span>👶 Kids Mode</span>
-        </button>
-        <button class="mode-btn" data-audience="woman">
-          <span>👩 Women Support</span>
-        </button>
-        <button class="mode-btn" data-audience="general">
-          <span>🌐 General Safety</span>
-        </button>
-      </div>
+    <!-- Audience Selector -->
+    <div class="audience-bar">
+      <span>Who is asking?</span>
+      <button class="mode-btn active" data-audience="child">👶 Child</button>
+      <button class="mode-btn" data-audience="woman">👩 Woman</button>
+      <button class="mode-btn" data-audience="general">🌐 General</button>
     </div>
 
-    <!-- Safety Rule Reminder Banner -->
-    <div class="safety-rule-banner">
-      <div class="rule-step">1️⃣ <strong>SAY NO!</strong> 🛑</div>
-      <div class="rule-step">2️⃣ <strong>RUN AWAY!</strong> 🏃</div>
-      <div class="rule-step">3️⃣ <strong>TELL A TRUSTED ADULT!</strong> 👨‍👩‍👧</div>
-    </div>
-
-    <!-- Chat Messages Scroll Area -->
-    <section id="chatMessages" class="chat-messages" aria-live="polite">
-      <!-- Minni Welcome Bubble -->
-      <div class="message-wrapper minni-message">
-        <div class="message-avatar">🌸</div>
-        <div class="message-bubble">
-          <div class="message-sender">Minni</div>
-          <div class="message-text">
-            Hi! I'm <strong>Minni</strong>, your safety buddy! 💖<br><br>
-            I can answer your questions about <strong>good touch & bad touch</strong>, <strong>strangers</strong>, <strong>online safety</strong>, or <strong>bullying</strong>.<br><br>
-            Click any topic below or type/speak your question! 👇
+    <!-- Chat Messages Window -->
+    <main id="chatMessages" class="chat-messages">
+      <div class="msg minni">
+        <div class="msg-avatar">🌸</div>
+        <div class="msg-body">
+          <div class="msg-sender">Minni</div>
+          <div class="msg-text">
+            Hello! I am Minni. I can answer your questions about body safety, strangers, bullying, or online rules. Ask me anything!
           </div>
-          <div class="bubble-actions">
-            <button class="speak-msg-btn" title="Listen to message">🔊 Listen</button>
-          </div>
-          <span class="message-time">Just now</span>
         </div>
       </div>
-    </section>
+    </main>
 
-    <!-- Visual Kid-Friendly Topic Cards -->
-    <div class="topic-cards-container">
-      <div class="topic-grid" id="topicGrid">
-        <button class="topic-card touch" data-prompt="What is good touch and bad touch?">
-          <span class="topic-icon">🌈</span>
-          <div class="topic-text">
-            <strong>Good & Bad Touch</strong>
-            <span>Learn about your body rules</span>
-          </div>
-        </button>
-        
-        <button class="topic-card stranger" data-prompt="What should I do if a stranger talks to me or offers me something?">
-          <span class="topic-icon">🚗</span>
-          <div class="topic-text">
-            <strong>Stranger Rules</strong>
-            <span>How to stay safe around strangers</span>
-          </div>
-        </button>
-
-        <button class="topic-card bullying" data-prompt="Someone is being mean and bullying me. What can I do?">
-          <span class="topic-icon">🛑</span>
-          <div class="topic-text">
-            <strong>Bullying Help</strong>
-            <span>Stop mean kids & get help</span>
-          </div>
-        </button>
-
-        <button class="topic-card online" data-prompt="What are the rules to stay safe online and on internet games?">
-          <span class="topic-icon">📱</span>
-          <div class="topic-text">
-            <strong>Online Safety</strong>
-            <span>Safe internet & game rules</span>
-          </div>
-        </button>
-
-        <button class="topic-card danger-card" data-prompt="Someone is touching me inappropriately right now help me">
-          <span class="topic-icon">🆘</span>
-          <div class="topic-text">
-            <strong>I Need Help Now!</strong>
-            <span>Click for immediate emergency support</span>
-          </div>
-        </button>
-      </div>
+    <!-- Quick Questions -->
+    <div class="quick-chips">
+      <button class="chip" data-prompt="What is good touch and bad touch?">Good & Bad Touch</button>
+      <button class="chip" data-prompt="What should I do if a stranger talks to me?">Stranger Safety</button>
+      <button class="chip" data-prompt="How to stay safe online?">Online Safety</button>
+      <button class="chip" data-prompt="What to do if someone is bullying me?">Bullying Help</button>
+      <button class="chip danger" data-prompt="Someone is touching me inappropriately right now help me">Emergency Help 🚨</button>
     </div>
 
     <!-- Typing Indicator -->
-    <div id="typingIndicator" class="typing-indicator hidden">
-      <div class="message-avatar bounce">🌸</div>
-      <div class="typing-bubble">
-        <div class="typing-dots">
-          <span class="dot"></span>
-          <span class="dot"></span>
-          <span class="dot"></span>
-        </div>
-        <span class="typing-text">Minni is typing a friendly answer...</span>
-      </div>
+    <div id="typing" class="typing-box hidden">
+      <span>🌸 Minni is typing...</span>
     </div>
 
-    <!-- Big Kid-Friendly Input Bar -->
-    <footer class="chat-input-area">
+    <!-- Input Form -->
+    <footer class="input-container">
       <form id="chatForm" class="chat-form">
-        <button type="button" id="micBtn" class="big-mic-btn" title="Tap to Speak (Voice Input)">
-          <span class="mic-icon">🎙️</span>
-          <span class="mic-pulse-ring"></span>
-        </button>
-        <input 
-          type="text" 
-          id="messageInput" 
-          class="message-input" 
-          placeholder="Type your question or tap microphone to speak..." 
-          autocomplete="off"
-          maxlength="1000"
-          required
-        />
-        <button type="submit" id="sendBtn" class="big-send-btn" title="Send Message">
-          <span>Ask Minni</span>
-          <span class="send-sparkle">✨</span>
-        </button>
+        <button type="button" id="micBtn" class="icon-btn" title="Speak">🎙️</button>
+        <input type="text" id="messageInput" placeholder="Type your question here..." autocomplete="off" required />
+        <button type="submit" class="send-btn">Send ✨</button>
       </form>
-      <div class="privacy-note">
-        🤗 Minni is your safe space. You are never in trouble for asking questions or telling a trusted adult.
-      </div>
     </footer>
-  </main>
-
-  <!-- 3-Step Safety Rule Modal -->
-  <div id="ruleModal" class="modal-overlay hidden">
-    <div class="modal-card">
-      <button id="closeModalBtn" class="modal-close">✖</button>
-      <div class="modal-header">
-        <span class="modal-icon">🛡️</span>
-        <h2>Minni's 3-Step Body Safety Rule</h2>
-      </div>
-      <div class="modal-body">
-        <div class="modal-step red">
-          <span class="step-num">1</span>
-          <div class="step-content">
-            <h3>SAY NO! 🛑</h3>
-            <p>If anyone touches you in a way that makes you feel uncomfortable, confused, or scared, say <strong>NO!</strong> loudly and firmly.</p>
-          </div>
-        </div>
-        <div class="modal-step yellow">
-          <span class="step-num">2</span>
-          <div class="step-content">
-            <h3>RUN AWAY! 🏃</h3>
-            <p>Get away from that person immediately and go to a safe place with other people or trusted adults.</p>
-          </div>
-        </div>
-        <div class="modal-step green">
-          <span class="step-num">3</span>
-          <div class="step-content">
-            <h3>TELL A TRUSTED ADULT! 👨‍👩‍👧</h3>
-            <p>Tell a parent, teacher, doctor, or police officer right away. Secrets about touching are NEVER okay to keep!</p>
-          </div>
-        </div>
-      </div>
-    </div>
   </div>
 
-  <!-- JavaScript -->
   <script src="/static/js/app.js"></script>
 </body>
 </html>
