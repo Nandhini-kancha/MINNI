@@ -8,7 +8,7 @@ logger = logging.getLogger("minni.gemini_service")
 
 
 class GeminiService:
-    """Service to communicate with Google Gemini API for natural-language generation."""
+    """Service to communicate with Google Gemini API for natural-language & audio generation."""
 
     def __init__(self):
         self.model_name = settings.GEMINI_MODEL
@@ -91,6 +91,63 @@ class GeminiService:
         # Fallback generator if API key is unconfigured or rate limited
         return self._generate_fallback_response(message, intent, audience)
 
+    def generate_response_from_audio(
+        self,
+        audio_bytes: bytes,
+        mime_type: str = "audio/wav",
+        session_history: Optional[List[Dict[str, str]]] = None,
+        audience: str = "general"
+    ) -> str:
+        """Processes raw audio file bytes directly using Gemini's native multimodal audio API."""
+        audience_instruction = self._get_audience_instruction(audience)
+        full_system_instruction = (
+            f"{MINNI_SYSTEM_PROMPT}\n{audience_instruction}\n"
+            "TASK: Listen to the audio input carefully. Understand the user's spoken question about body safety, boundaries, "
+            "strangers, or bullying (in English, Telugu, or Teluglish) and provide a warm, protective, age-appropriate response."
+        )
+
+        if settings.is_gemini_configured():
+            candidate_models = [self.model_name, "gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash-latest"]
+            candidate_models = list(dict.fromkeys([m for m in candidate_models if m]))
+
+            for model_id in candidate_models:
+                try:
+                    from google import genai
+                    from google.genai import types
+
+                    client = genai.Client(api_key=settings.GEMINI_API_KEY)
+
+                    contents = [
+                        types.Content(
+                            role="user",
+                            parts=[
+                                types.Part.from_bytes(data=audio_bytes, mime_type=mime_type),
+                                types.Part.from_text(text="Please answer this spoken voice recording about safety.")
+                            ]
+                        )
+                    ]
+
+                    config = types.GenerateContentConfig(
+                        system_instruction=full_system_instruction,
+                        temperature=0.7,
+                        max_output_tokens=1000,
+                    )
+
+                    response = client.models.generate_content(
+                        model=model_id,
+                        contents=contents,
+                        config=config,
+                    )
+
+                    if response and response.text:
+                        return response.text.strip()
+
+                except Exception as e:
+                    logger.warning(f"Audio Gemini model {model_id} notice: {e}")
+
+        # Fallback audio response
+        return self._generate_fallback_response("Voice message received", "body_safety", audience)
+
     def _generate_fallback_response(self, message: str, intent: str, audience: str) -> str:
         """Rule-based fallback generator for Minni supporting English and Telugu."""
         msg_lower = message.lower().strip()
@@ -120,7 +177,6 @@ class GeminiService:
                     "మీకు ఎలాంటి భయం లేదా అసౌకర్యం అనిపించినా వెంటనే మీ నమ్మకమైన పెద్దలకు చెప్పండి లేదా హెల్ప్‌లైన్ **1098 / 112** కి కాల్ చేయండి!"
                 )
 
-        # Strict greeting check using word boundary (so words like 'gurinchi' don't trigger 'hi')
         if intent == "greeting" or re.search(r"\b(hi|hello|hey|who are you)\b", msg_lower):
             return (
                 "Hello there! I am **Minni**, your friendly AI safety companion. 😊\n\n"

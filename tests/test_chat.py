@@ -1,3 +1,4 @@
+import io
 from fastapi.testclient import TestClient
 from app.main import app
 
@@ -32,6 +33,21 @@ def test_post_chat_wake_word_stripping():
     assert response.status_code == 200
     data = response.json()
     assert data["intent"] == "body_safety"
+
+
+def test_post_chat_voice_audio_upload():
+    """Test POST /api/chat/voice with dummy audio file upload."""
+    dummy_audio_bytes = b"RIFF....WAVEfmt ....data...."
+    files = {"audio_file": ("test_audio.wav", io.BytesIO(dummy_audio_bytes), "audio/wav")}
+    data_payload = {"audience": "child"}
+    
+    response = client.post("/api/chat/voice", files=files, data=data_payload)
+    assert response.status_code == 200
+    data = response.json()
+    assert "response" in data
+    assert "session_id" in data
+    assert data["intent"] == "voice_audio_input"
+    assert data["action_taken"] == "multimodal_audio_response"
 
 
 def test_post_chat_high_risk_emergency_query():
