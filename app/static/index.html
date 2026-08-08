@@ -21,8 +21,8 @@
         </div>
       </div>
       <div class="header-right">
-        <button id="ttsBtn" class="btn outline" title="Voice Output">🔊 Voice On</button>
-        <button id="resetBtn" class="btn outline" title="Clear Chat">🔄 Reset</button>
+        <button type="button" id="ttsBtn" class="btn outline" title="Voice Output">🔊 Voice On</button>
+        <button type="button" id="resetBtn" class="btn outline" title="Clear Chat">🔄 Reset</button>
       </div>
     </header>
 
@@ -41,9 +41,9 @@
     <!-- Audience Selector -->
     <div class="audience-bar">
       <span>Who is asking?</span>
-      <button class="mode-btn active" data-audience="child">👶 Child</button>
-      <button class="mode-btn" data-audience="woman">👩 Woman</button>
-      <button class="mode-btn" data-audience="general">🌐 General</button>
+      <button type="button" class="mode-btn active" data-audience="child">👶 Child</button>
+      <button type="button" class="mode-btn" data-audience="woman">👩 Woman</button>
+      <button type="button" class="mode-btn" data-audience="general">🌐 General</button>
     </div>
 
     <!-- Chat Messages Window -->
@@ -53,7 +53,7 @@
         <div class="msg-body">
           <div class="msg-sender">Minni</div>
           <div class="msg-text">
-            Hello! I am Minni. Tap the 🎙️ **Voice Record** button below to speak to me, or type your question!
+            Hello! I am Minni. Tap 🎙️ <strong>Record Voice</strong> to speak to me, or type your question!
           </div>
         </div>
       </div>
@@ -61,25 +61,25 @@
 
     <!-- Quick Questions -->
     <div class="quick-chips">
-      <button class="chip" data-prompt="What is good touch and bad touch?">Good & Bad Touch</button>
-      <button class="chip" data-prompt="What should I do if a stranger talks to me?">Stranger Safety</button>
-      <button class="chip" data-prompt="How to stay safe online?">Online Safety</button>
-      <button class="chip" data-prompt="What to do if someone is bullying me?">Bullying Help</button>
-      <button class="chip danger" data-prompt="Someone is touching me inappropriately right now help me">Emergency Help 🚨</button>
+      <button type="button" class="chip" data-prompt="What is good touch and bad touch?">Good & Bad Touch</button>
+      <button type="button" class="chip" data-prompt="What should I do if a stranger talks to me?">Stranger Safety</button>
+      <button type="button" class="chip" data-prompt="How to stay safe online?">Online Safety</button>
+      <button type="button" class="chip" data-prompt="What to do if someone is bullying me?">Bullying Help</button>
+      <button type="button" class="chip danger" data-prompt="Someone is touching me inappropriately right now help me">Emergency Help 🚨</button>
     </div>
 
-    <!-- Live Voice Recording Active Overlay (Appears when recording voice) -->
+    <!-- Voice Recording Status Overlay -->
     <div id="recordingOverlay" class="recording-overlay hidden">
       <div class="recording-indicator">
         <span class="rec-dot">🔴</span>
-        <span id="recTimer" class="rec-timer">Recording... 00:00</span>
+        <span id="recTimer" class="rec-timer">Listening... Speak now!</span>
         <div class="sound-wave">
           <span class="wave-bar"></span>
           <span class="wave-bar"></span>
           <span class="wave-bar"></span>
           <span class="wave-bar"></span>
         </div>
-        <button id="stopRecBtn" class="stop-rec-btn">⏹️ Stop & Send</button>
+        <button type="button" id="stopRecBtn" class="stop-rec-btn">⏹️ Stop & Send</button>
       </div>
     </div>
 
@@ -90,13 +90,13 @@
 
     <!-- Input Form -->
     <footer class="input-container">
-      <form id="chatForm" class="chat-form">
+      <form id="chatForm" class="chat-form" onsubmit="return false;">
         <button type="button" id="micBtn" class="mic-btn" title="Tap to Record Voice">
           <span class="mic-icon">🎙️</span>
           <span class="mic-label">Record Voice</span>
         </button>
-        <input type="text" id="messageInput" placeholder="Type or record voice message..." autocomplete="off" required />
-        <button type="submit" class="send-btn">Send ✨</button>
+        <input type="text" id="messageInput" placeholder="Type or record voice message..." autocomplete="off" />
+        <button type="button" id="sendBtn" class="send-btn">Send ✨</button>
       </form>
     </footer>
   </div>
