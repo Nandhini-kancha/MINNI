@@ -94,18 +94,18 @@ class GeminiService:
     def _generate_fallback_response(self, message: str, intent: str, audience: str) -> str:
         """Rule-based fallback generator for Minni supporting English and Telugu."""
         msg_lower = message.lower().strip()
-        is_telugu = bool(re.search(r"[\u0C00-\u0C7F]", message)) or any(w in msg_lower for w in ["taakidi", "chedu", "manchi", "nannu", "edipistunnaru", "teliyani", "bhayanga"])
+        is_telugu = bool(re.search(r"[\u0C00-\u0C7F]", message)) or any(w in msg_lower for w in ["naku", "taakidi", "chedu", "manchi", "nannu", "edipistunnaru", "teliyani", "bhayanga", "gurinchi", "chey", "cheppandi"])
 
         if is_telugu:
-            if intent == "body_safety":
+            if intent in ["body_safety", "general_education", "unsafe_situation"] or any(w in msg_lower for w in ["good", "bad", "touch", "rules", "safety"]):
                 return (
-                    "నమస్కారం! గుర్తుంచుకోండి, మీ శరీరం మీ స్వంతం. సురక్షితంగా ఉండటం మీ హక్కు.\n\n"
-                    "**మంచి తాకిడి (Good Touch)**: మీకు సంతోషం మరియు సురక్షితమైన భావన కలిగిస్తుంది (ఉదాహరణకు అమ్మ లేదా నాన్న ఇచ్చే ప్రేమపూర్వక కౌగిలింత).\n"
-                    "**చెడు తాకిడి (Bad Touch)**: మీకు భయం, బాధ లేదా అసౌకర్యం కలిగిస్తుంది.\n\n"
-                    "ఎవరైనా మీ అనుమతి లేకుండా మీ శరీర భాగాలను తాకితే:\n"
-                    "1. **వద్దు! (SAY NO!)** అని గట్టిగా చెప్పండి.\n"
-                    "2. **వెంటనే దూరంగా వెళ్ళండి (RUN AWAY)**.\n"
-                    "3. **నమ్మకమైన పెద్దలకు చెప్పండి (TELL A TRUSTED ADULT)**. ఇది మీ తప్పు కాదు!"
+                    "నమస్కారం! మీ రక్షణ గురించి మిన్నీ వివరంగా చెప్తోంది. గుర్తుంచుకోండి, మీ శరీరం మీ స్వంతం.\n\n"
+                    "**1. మంచి తాకిడి (Good Touch)**: మీకు సంతోషం, భద్రత మరియు ప్రేమపూర్వక భావన కలిగిస్తుంది (ఉదాహరణకు అమ్మ లేదా నాన్న ఇచ్చే ముద్దు లేదా హగ్).\n\n"
+                    "**2. చెడు తాకిడి (Bad Touch)**: మీ ప్రైవేట్ భాగాలను ఎవరైనా తాకినా లేదా మీకు భయం, అసౌకర్యం కలిగించినా అది చెడు తాకిడి.\n\n"
+                    "**మిన్నీ 3 ముఖ్యమైన రక్షణ నియమాలు (3 Safety Rules)**:\n"
+                    "1. **వద్దు! (SAY NO!)**: గట్టిగా వద్దని చెప్పండి.\n"
+                    "2. **పరిగెత్తండి (RUN AWAY)**: సురక్షిత ప్రాంతానికి వెళ్ళండి.\n"
+                    "3. **పెద్దలకు చెప్పండి (TELL A TRUSTED ADULT)**: మీ తల్లిదండ్రులు లేదా ఉపాధ్యాయులకు వెంటనే చెప్పండి. ఇది మీ తప్పు కాదు!"
                 )
             elif intent == "stranger_safety":
                 return (
@@ -116,11 +116,12 @@ class GeminiService:
                 )
             else:
                 return (
-                    f"నమస్కారం! నేను మిన్నీ (Minni). మీ రక్షణ మరియు భద్రత నా బాధ్యత.\n\n"
+                    "నమస్కారం! నేను మిన్నీ (Minni). మీ రక్షణ మరియు భద్రత నా బాధ్యత.\n\n"
                     "మీకు ఎలాంటి భయం లేదా అసౌకర్యం అనిపించినా వెంటనే మీ నమ్మకమైన పెద్దలకు చెప్పండి లేదా హెల్ప్‌లైన్ **1098 / 112** కి కాల్ చేయండి!"
                 )
 
-        if intent == "greeting" or any(w in msg_lower for w in ["hi", "hello", "hey", "who are you"]):
+        # Strict greeting check using word boundary (so words like 'gurinchi' don't trigger 'hi')
+        if intent == "greeting" or re.search(r"\b(hi|hello|hey|who are you)\b", msg_lower):
             return (
                 "Hello there! I am **Minni**, your friendly AI safety companion. 😊\n\n"
                 "I am here to help you learn about **body safety**, **good touch & bad touch**, "
