@@ -53,7 +53,7 @@
         <div class="msg-body">
           <div class="msg-sender">Minni</div>
           <div class="msg-text">
-            Hello! I am Minni. I can answer your questions about body safety, strangers, bullying, or online rules. Ask me anything!
+            Hello! I am Minni. Tap the 🎙️ **Voice Record** button below to speak to me, or type your question!
           </div>
         </div>
       </div>
@@ -68,16 +68,34 @@
       <button class="chip danger" data-prompt="Someone is touching me inappropriately right now help me">Emergency Help 🚨</button>
     </div>
 
+    <!-- Live Voice Recording Active Overlay (Appears when recording voice) -->
+    <div id="recordingOverlay" class="recording-overlay hidden">
+      <div class="recording-indicator">
+        <span class="rec-dot">🔴</span>
+        <span id="recTimer" class="rec-timer">Recording... 00:00</span>
+        <div class="sound-wave">
+          <span class="wave-bar"></span>
+          <span class="wave-bar"></span>
+          <span class="wave-bar"></span>
+          <span class="wave-bar"></span>
+        </div>
+        <button id="stopRecBtn" class="stop-rec-btn">⏹️ Stop & Send</button>
+      </div>
+    </div>
+
     <!-- Typing Indicator -->
     <div id="typing" class="typing-box hidden">
-      <span>🌸 Minni is typing...</span>
+      <span>🌸 Minni is thinking...</span>
     </div>
 
     <!-- Input Form -->
     <footer class="input-container">
       <form id="chatForm" class="chat-form">
-        <button type="button" id="micBtn" class="icon-btn" title="Speak">🎙️</button>
-        <input type="text" id="messageInput" placeholder="Type your question here..." autocomplete="off" required />
+        <button type="button" id="micBtn" class="mic-btn" title="Tap to Record Voice">
+          <span class="mic-icon">🎙️</span>
+          <span class="mic-label">Record Voice</span>
+        </button>
+        <input type="text" id="messageInput" placeholder="Type or record voice message..." autocomplete="off" required />
         <button type="submit" class="send-btn">Send ✨</button>
       </form>
     </footer>

@@ -1,4 +1,5 @@
 document.addEventListener("DOMContentLoaded", () => {
+  // DOM Elements
   const chatMessages = document.getElementById("chatMessages");
   const chatForm = document.getElementById("chatForm");
   const messageInput = document.getElementById("messageInput");
@@ -9,9 +10,17 @@ document.addEventListener("DOMContentLoaded", () => {
   const micBtn = document.getElementById("micBtn");
   const modeBtns = document.querySelectorAll(".mode-btn");
   const chips = document.querySelectorAll(".chip");
+  
+  // Voice Recording DOM
+  const recordingOverlay = document.getElementById("recordingOverlay");
+  const recTimer = document.getElementById("recTimer");
+  const stopRecBtn = document.getElementById("stopRecBtn");
 
   let currentAudience = "child";
   let ttsEnabled = true;
+  let isRecording = false;
+  let recInterval = null;
+  let secondsRecorded = 0;
 
   let sessionId = localStorage.getItem("minni_session_id");
   if (!sessionId) {
@@ -57,23 +66,93 @@ document.addEventListener("DOMContentLoaded", () => {
         <div class="msg-avatar">🌸</div>
         <div class="msg-body">
           <div class="msg-sender">Minni</div>
-          <div class="msg-text">Session restarted! I am here to answer your questions about body safety, strangers, bullying, or online rules.</div>
+          <div class="msg-text">Session restarted! Tap 🎙️ **Record Voice** to speak to me!</div>
         </div>
       </div>
     `;
   });
 
-  // Speech Recognition (STT)
+  // Speech Recognition (STT Voice Recording)
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  let recognition = null;
+
   if (SpeechRecognition) {
-    const recognition = new SpeechRecognition();
-    recognition.onresult = (e) => {
-      messageInput.value = e.results[0][0].transcript;
-      chatForm.dispatchEvent(new Event("submit"));
+    recognition = new SpeechRecognition();
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.lang = "en-US";
+
+    recognition.onstart = () => {
+      startRecordingUI();
     };
-    micBtn.addEventListener("click", () => recognition.start());
+
+    recognition.onend = () => {
+      stopRecordingUI();
+    };
+
+    recognition.onresult = (e) => {
+      let interimTranscript = "";
+      let finalTranscript = "";
+      for (let i = e.resultIndex; i < e.results.length; ++i) {
+        if (e.results[i].isFinal) {
+          finalTranscript += e.results[i][0].transcript;
+        } else {
+          interimTranscript += e.results[i][0].transcript;
+        }
+      }
+      if (finalTranscript || interimTranscript) {
+        messageInput.value = finalTranscript || interimTranscript;
+      }
+    };
+
+    micBtn.addEventListener("click", () => {
+      if (isRecording) {
+        recognition.stop();
+      } else {
+        try {
+          recognition.start();
+        } catch (err) {
+          console.warn("Speech recognition restart:", err);
+        }
+      }
+    });
+
+    if (stopRecBtn) {
+      stopRecBtn.addEventListener("click", () => {
+        if (isRecording && recognition) {
+          recognition.stop();
+        }
+        if (messageInput.value.trim()) {
+          chatForm.dispatchEvent(new Event("submit"));
+        }
+      });
+    }
   } else {
-    micBtn.style.display = "none";
+    micBtn.title = "Voice recognition not supported in this browser";
+  }
+
+  // Voice Recording UI Timer Functions
+  function startRecordingUI() {
+    isRecording = true;
+    micBtn.classList.add("active");
+    recordingOverlay.classList.remove("hidden");
+    secondsRecorded = 0;
+    recTimer.textContent = "Recording... 00:00";
+
+    clearInterval(recInterval);
+    recInterval = setInterval(() => {
+      secondsRecorded++;
+      const mins = String(Math.floor(secondsRecorded / 60)).padStart(2, "0");
+      const secs = String(secondsRecorded % 60).padStart(2, "0");
+      recTimer.textContent = `Recording... ${mins}:${secs}`;
+    }, 1000);
+  }
+
+  function stopRecordingUI() {
+    isRecording = false;
+    micBtn.classList.remove("active");
+    recordingOverlay.classList.add("hidden");
+    clearInterval(recInterval);
   }
 
   // Form Submit
