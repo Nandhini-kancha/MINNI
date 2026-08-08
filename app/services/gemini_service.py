@@ -39,9 +39,7 @@ class GeminiService:
 
         # If Gemini API Key is configured, attempt real Gemini API call
         if settings.is_gemini_configured():
-            # Try list of models to handle rate limits or regional availability
-            candidate_models = [self.model_name, "gemini-1.5-flash", "gemini-2.0-flash", "gemini-1.5-pro"]
-            # Deduplicate preserving order
+            candidate_models = [self.model_name, "gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash-latest"]
             candidate_models = list(dict.fromkeys([m for m in candidate_models if m]))
 
             for model_id in candidate_models:
@@ -81,28 +79,7 @@ class GeminiService:
                         return response.text.strip()
 
                 except Exception as e:
-                    logger.warning(f"google-genai model {model_id} failed: {e}")
-                    try:
-                        import google.generativeai as genai_legacy
-                        genai_legacy.configure(api_key=settings.GEMINI_API_KEY)
-                        
-                        legacy_model = genai_legacy.GenerativeModel(
-                            model_name=model_id,
-                            system_instruction=full_system_instruction
-                        )
-                        
-                        history_formatted = []
-                        if session_history:
-                            for turn in session_history:
-                                role = "user" if turn["role"] == "user" else "model"
-                                history_formatted.append({"role": role, "parts": [turn["content"]]})
-
-                        chat = legacy_model.start_chat(history=history_formatted)
-                        res = chat.send_message(message)
-                        if res and res.text:
-                            return res.text.strip()
-                    except Exception as ex:
-                        logger.warning(f"Legacy Gemini API model {model_id} error: {ex}")
+                    logger.warning(f"Gemini API model {model_id} notice: {e}")
 
         # Fallback generator if API key is unconfigured or rate limited
         return self._generate_fallback_response(message, intent, audience)
