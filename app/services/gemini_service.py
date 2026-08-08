@@ -1,5 +1,5 @@
-import re
 import logging
+import re
 from typing import List, Dict, Any, Optional
 from app.core.config import settings
 from app.core.system_prompts import MINNI_SYSTEM_PROMPT
@@ -36,7 +36,13 @@ class GeminiService:
     ) -> str:
         """Generates response using Gemini API with automatic model fallback for missing key, quota limits, or API errors."""
         audience_instruction = self._get_audience_instruction(audience)
-        full_system_instruction = f"{MINNI_SYSTEM_PROMPT}\n{audience_instruction}\nIntent category: {intent}"
+        
+        telugu_instruction = (
+            "\nLANGUAGE REQUIREMENT: The user may ask questions in Telugu script or Romanized Telugu (Teluglish). "
+            "If the question is in Telugu or Teluglish, you MUST respond in friendly, clear, warm Telugu so they understand easily!"
+        )
+
+        full_system_instruction = f"{MINNI_SYSTEM_PROMPT}\n{audience_instruction}\n{telugu_instruction}\nIntent category: {intent}"
 
         # If Gemini API Key is configured, attempt real Gemini API call
         if settings.is_gemini_configured():
@@ -86,41 +92,40 @@ class GeminiService:
         return self._generate_fallback_response(message, intent, audience)
 
     def _generate_fallback_response(self, message: str, intent: str, audience: str) -> str:
-        """Rule-based fallback generator for Minni providing bilingual Telugu and English safety responses."""
+        """Rule-based fallback generator for Minni supporting English and Telugu."""
         msg_lower = message.lower().strip()
-        is_telugu = bool(re.search(r"[\u0c00-\u0c7f]", message)) or any(w in msg_lower for w in ["sparsha", "namaskaram", "sahayam", "chedu"])
+        is_telugu = bool(re.search(r"[\u0C00-\u0C7F]", message)) or any(w in msg_lower for w in ["taakidi", "chedu", "manchi", "nannu", "edipistunnaru", "teliyani", "bhayanga"])
 
         if is_telugu:
             if intent == "body_safety":
                 return (
-                    "నమస్కారం! గుర్తుంచుకోండి, మీ శరీరం మీ స్వంతం. ఎల్లప్పుడూ సురక్షితంగా ఉండే హక్కు మీకు ఉంది. 😊\n\n"
-                    "• **మంచి స్పర్శ (Good Touch)**: మిమ్మల్ని సంతోషంగా, సురక్షితంగా ఉంచుతుంది (ఉదాహరణకు అమ్మ లేదా నాన్న ఇచ్చే కౌగిలింత).\n"
-                    "• **చెడు స్పర్శ (Bad Touch)**: మిమ్మల్ని గందరగోళానికి, భయానికి లేదా అసౌకర్యానికి గురిచేస్తుంది.\n\n"
-                    "ఎవరైనా మీ ప్రైవేట్ భాగాలను తాకడానికి ప్రయత్నిస్తే లేదా మిమ్మల్ని తాకమని అడిగితే:\n"
+                    "నమస్కారం! గుర్తుంచుకోండి, మీ శరీరం మీ స్వంతం. సురక్షితంగా ఉండటం మీ హక్కు.\n\n"
+                    "**మంచి తాకిడి (Good Touch)**: మీకు సంతోషం మరియు సురక్షితమైన భావన కలిగిస్తుంది (ఉదాహరణకు అమ్మ లేదా నాన్న ఇచ్చే ప్రేమపూర్వక కౌగిలింత).\n"
+                    "**చెడు తాకిడి (Bad Touch)**: మీకు భయం, బాధ లేదా అసౌకర్యం కలిగిస్తుంది.\n\n"
+                    "ఎవరైనా మీ అనుమతి లేకుండా మీ శరీర భాగాలను తాకితే:\n"
                     "1. **వద్దు! (SAY NO!)** అని గట్టిగా చెప్పండి.\n"
-                    "2. **పరుగెత్తండి (RUN AWAY)** - సురక్షిత ప్రాంతానికి వెళ్ళండి.\n"
-                    "3. **చెప్పండి (TELL)** - మీరు నమ్మే పెద్దలకు (తల్లిదండ్రులు, ఉపాధ్యాయులు) వెంటనే చెప్పండి. మీరు చెప్పినందుకు మీపై ఎవరూ కోప్పడరు!"
+                    "2. **వెంటనే దూరంగా వెళ్ళండి (RUN AWAY)**.\n"
+                    "3. **నమ్మకమైన పెద్దలకు చెప్పండి (TELL A TRUSTED ADULT)**. ఇది మీ తప్పు కాదు!"
                 )
             elif intent == "stranger_safety":
                 return (
-                    "అపరిచితుల నుండి భద్రత చాలా ముఖ్యం!\n\n"
-                    "మీ కుటుంబానికి తెలియని వ్యక్తి అపరిచితుడు. అత్యవసర భద్రతా నియమాలు పాటించండి:\n"
-                    "1. **అపరిచితులతో ఎక్కడికీ వెళ్లవద్దు** లేదా వారి కార్లలో ఎక్కవద్దు.\n"
-                    "2. **బహుమతులు లేదా మిఠాయిలు తీసుకోవద్దు**.\n"
-                    "3. ఎవరైనా మిమ్మల్ని భయపెడితే, వద్దు అని చెప్పి వెంటనే పోలీసులకు లేదా ఉపాధ్యాయులకు చెప్పండి."
+                    "అపరిచితుల భద్రత చాలా ముఖ్యం!\n\n"
+                    "1. తెలియని వ్యక్తులతో ఎక్కడికీ వెళ్ళకూడదు.\n"
+                    "2. అపరిచితులు ఇచ్చే చాక్లెట్లు లేదా బహుమతులు తీసుకోకూడదు.\n"
+                    "3. ఎవ‌రైనా మిమ్మల్ని భయపెడితే వెంటనే మీ తల్లిదండ్రులకు లేదా ఉపాధ్యాయులకు చెప్పండి!"
                 )
             else:
                 return (
-                    f"నమస్కారం! నేను **మిన్ని (Minni)**. మీ ప్రశ్న: '{message}'.\n\n"
-                    "మీరు ఎల్లప్పుడూ సురక్షితంగా ఉండాలి. శరీరం మరియు ఆన్‌లైన్ భద్రత గురించి ఏవైనా అనుమానాలు ఉంటే మీరు నమ్మే పెద్దలకు లేదా చైల్డ్ హెల్ప్‌లైన్ **1098** కి వెంటనే చెప్పండి! 💖"
+                    f"నమస్కారం! నేను మిన్నీ (Minni). మీ రక్షణ మరియు భద్రత నా బాధ్యత.\n\n"
+                    "మీకు ఎలాంటి భయం లేదా అసౌకర్యం అనిపించినా వెంటనే మీ నమ్మకమైన పెద్దలకు చెప్పండి లేదా హెల్ప్‌లైన్ **1098 / 112** కి కాల్ చేయండి!"
                 )
 
         if intent == "greeting" or any(w in msg_lower for w in ["hi", "hello", "hey", "who are you"]):
             return (
                 "Hello there! I am **Minni**, your friendly AI safety companion. 😊\n\n"
-                "I understand **Telugu (తెలుగు)** and **English**! I am here to help you learn about **body safety**, **good touch & bad touch**, "
+                "I am here to help you learn about **body safety**, **good touch & bad touch**, "
                 "**stranger safety**, **bullying**, and **staying safe online**.\n\n"
-                "You can ask me any question in Telugu or English!"
+                "You can ask me any question in English or Telugu!"
             )
         elif intent == "body_safety":
             return (

@@ -8,6 +8,8 @@ def test_high_risk_emergency_classification():
         "Help me please im scared he has a weapon",
         "I want to kill myself",
         "I am trapped and locked in a room",
+        "నన్ను కొడుతున్నారు రక్షించండి",
+        "nannu kottutunnaru help me",
     ]
     for msg in high_risk_inputs:
         intent, risk, flagged, emergency_resp = safety_service.analyze_message(msg, audience="child")
@@ -15,7 +17,20 @@ def test_high_risk_emergency_classification():
         assert risk == "HIGH_RISK"
         assert flagged is True
         assert emergency_resp is not None
-        assert "1098" in emergency_resp  # Child helpline present
+        assert "1098" in emergency_resp
+
+
+def test_telugu_body_safety_classification():
+    """Test Telugu script and Teluglish body safety questions."""
+    telugu_inputs = [
+        "నాకు ఎవ‌రైనా చెడు తాకిడి చేస్తే ఏం చేయాలి?",
+        "chedu taakidi ante enti?",
+    ]
+    for msg in telugu_inputs:
+        intent, risk, flagged, emergency_resp = safety_service.analyze_message(msg)
+        assert intent == "body_safety"
+        assert risk == "SENSITIVE"
+        assert flagged is False
 
 
 def test_body_safety_classification():
