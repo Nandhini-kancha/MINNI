@@ -14,13 +14,11 @@ router = APIRouter(tags=["Chatbot"])
 def strip_wake_word(message: str) -> str:
     """Strips leading wake words ('Hey Minni', 'Hi Minni', 'Hello Minni', 'OK Minni', 'Minni,') from transcribed robot hardware speech, preserving standalone greetings."""
     cleaned = message.strip()
-    # If the user just said "Hey Minni", "Hi Minni", "Hello Minni", keep it so it triggers the friendly greeting response!
     if re.match(r"^(hey|hi|hello|ok)\s+minni[!.,\s]*$", cleaned, flags=re.IGNORECASE):
         return cleaned
     cleaned = re.sub(r"^(hey|hi|hello|ok)\s+minni[,!\s]*", "", cleaned, flags=re.IGNORECASE).strip()
     cleaned = re.sub(r"^minni[,!\s]+", "", cleaned, flags=re.IGNORECASE).strip()
     return cleaned if cleaned else message.strip()
-
 
 
 def clean_voice_text(text: str) -> str:
@@ -38,13 +36,7 @@ def clean_voice_text(text: str) -> str:
     response_model=ChatResponse,
     status_code=status.HTTP_200_OK,
     summary="Minni ChatGPT-Style Text/Speech Endpoint for Hardware",
-    description=(
-        "Main API endpoint for robot hardware.\n\n"
-        "- Receives input transcribed from robot microphone after wake-word 'Hey Minni' is detected.\n"
-        "- Automatically cleans leading wake words ('Hey Minni', 'Hi Minni').\n"
-        "- Evaluates input through Safety Layer and generates ChatGPT-style conversational responses.\n"
-        "- Returns `response` (formatted text) and `voice_text` (clean plain-text for robot TTS speakers)."
-    )
+    description="Receives input transcribed from robot microphone after wake-word 'Hey Minni' is detected and returns response."
 )
 async def chat_endpoint(payload: ChatRequest) -> ChatResponse:
     """Processes user text input from robot microphone and generates ChatGPT-style Minni safety response."""
@@ -111,6 +103,21 @@ async def chat_endpoint(payload: ChatRequest) -> ChatResponse:
         )
 
 
+@router.get(
+    "/chat/voice",
+    summary="Voice Endpoint Information",
+    description="Information endpoint for GET requests explaining POST usage."
+)
+async def get_voice_info():
+    """Information endpoint for GET requests explaining that voice endpoint expects HTTP POST."""
+    return {
+        "status": "active",
+        "message": "This is an HTTP POST endpoint for robot voice audio streams.",
+        "usage": "Send an HTTP POST request with raw audio bytes (Content-Type: audio/wav) or test via /docs",
+        "docs": "https://minni-six.vercel.app/docs"
+    }
+
+
 @router.post(
     "/chat/voice",
     response_model=ChatResponse,
@@ -159,7 +166,6 @@ async def chat_voice_endpoint(
                 detail="Empty voice audio bytes received from robot hardware microphone."
             )
 
-        # Check session_id / audience from headers if not in query
         header_sid = request.headers.get("x-session-id")
         header_aud = request.headers.get("x-audience")
 

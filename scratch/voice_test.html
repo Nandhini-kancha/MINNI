@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Minni Voice Tester 🌸</title>
+  <style>
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f0f4f8; padding: 20px; text-align: center; }
+    .card { background: white; border-radius: 16px; padding: 30px; max-width: 500px; margin: 0 auto; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+    h1 { color: #d63384; margin-bottom: 8px; }
+    p { color: #555; font-size: 14px; }
+    .btn { background: #d63384; color: white; border: none; padding: 14px 28px; font-size: 16px; border-radius: 30px; cursor: pointer; transition: 0.2s; margin-top: 15px; font-weight: bold; }
+    .btn:hover { background: #b02a6b; }
+    .btn:disabled { background: #ccc; }
+    #status { margin-top: 20px; font-weight: bold; color: #333; }
+    #responseBox { margin-top: 20px; padding: 15px; background: #fff0f6; border-radius: 10px; border: 1px solid #fcc2d7; text-align: left; display: none; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>🌸 Minni Voice Tester</h1>
+    <p>Click <strong>"Start Recording"</strong>, speak into your microphone (e.g. <em>"Hey Minni, explain about safe touch"</em>), then click <strong>"Stop & Send"</strong>!</p>
+    
+    <button id="recordBtn" class="btn" onclick="toggleRecording()">🎤 Start Recording</button>
+    
+    <div id="status">Ready to test!</div>
+    
+    <div id="responseBox">
+      <strong>Minni Response:</strong>
+      <p id="responseText"></p>
+    </div>
+  </div>
+
+  <script>
+    let mediaRecorder;
+    let audioChunks = [];
+    let isRecording = false;
+
+    async function toggleRecording() {
+      const btn = document.getElementById("recordBtn");
+      const status = document.getElementById("status");
+      const responseBox = document.getElementById("responseBox");
+
+      if (!isRecording) {
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          mediaRecorder = new MediaRecorder(stream);
+          audioChunks = [];
+
+          mediaRecorder.ondataavailable = event => {
+            audioChunks.push(event.data);
+          };
+
+          mediaRecorder.onstop = async () => {
+            status.innerText = "⏳ Sending voice to Minni API...";
+            const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+            
+            // Send direct voice bytes/file to Minni API
+            const formData = new FormData();
+            formData.append("audio_file", audioBlob, "recording.webm");
+
+            try {
+              const res = await fetch("https://minni-six.vercel.app/api/chat/voice", {
+                method: "POST",
+                body: formData
+              });
+              const data = await res.json();
+              status.innerText = "✅ Response received!";
+              responseBox.style.display = "block";
+              document.getElementById("responseText").innerText = data.response;
+
+              // Speak response using browser TTS
+              if (data.voice_text) {
+                const utterance = new SpeechSynthesisUtterance(data.voice_text);
+                window.speechSynthesis.speak(utterance);
+              }
+            } catch (err) {
+              status.innerText = "❌ Error: " + err.message;
+            }
+          };
+
+          mediaRecorder.start();
+          isRecording = true;
+          btn.innerText = "⏹️ Stop & Send Voice";
+          btn.style.background = "#dc3545";
+          status.innerText = "🔴 Listening to your voice... Speak now!";
+        } catch (err) {
+          alert("Microphone permission denied or not available: " + err.message);
+        }
+      } else {
+        mediaRecorder.stop();
+        isRecording = false;
+        btn.innerText = "🎤 Start Recording";
+        btn.style.background = "#d63384";
+      }
+    }
+  </script>
+</body>
+</html>
