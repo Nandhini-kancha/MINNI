@@ -25,13 +25,14 @@ class SafetyService:
     ]
 
     BODY_SAFETY_PATTERNS = [
-        r"\b(good touch|bad touch|uncomfortable touch|private parts|swimsuit rule)\b",
+        r"\b(good touch|bad touch|safe touch|uncomfortable touch|private parts|swimsuit rule)\b",
         r"\b(body boundaries|my body|touch me|inappropriate touch|personal space)\b",
         r"\b(can someone touch|is it ok if someone touches|touching)\b",
         # Telugu Body Safety Keywords
         r"(చెడు తాకిడి|మంచి తాకిడి|రహస్య తాకిడి|శరీర భాగాలు|తాకడం|తాకిడి|నా శరీరం)",
-        r"\b(chedu taakidi|manchi taakidi|bad touch|good touch|rahasya taakidi|naa sareeram|taakidi)\b",
+        r"\b(chedu taakidi|manchi taakidi|bad touch|good touch|safe touch|rahasya taakidi|naa sareeram|taakidi)\b",
     ]
+
 
     STRANGER_SAFETY_PATTERNS = [
         r"\b(stranger|unknown person|someone I don't know|stranger danger)\b",
