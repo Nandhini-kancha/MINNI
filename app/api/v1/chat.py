@@ -12,22 +12,38 @@ router = APIRouter(tags=["Chatbot"])
 
 
 def strip_wake_word(message: str) -> str:
-    """Strips leading wake words ('Hey Minni', 'Hi Minni', 'Hello Minni', 'Minni,') from user speech input."""
+    """Strips leading wake words ('Hey Minni', 'Hi Minni', 'Hello Minni', 'OK Minni', 'Minni,') from transcribed robot hardware speech."""
     cleaned = message.strip()
-    cleaned = re.sub(r"^(hey|hi|hello)\s+minni[,!\s]*", "", cleaned, flags=re.IGNORECASE).strip()
+    cleaned = re.sub(r"^(hey|hi|hello|ok)\s+minni[,!\s]*", "", cleaned, flags=re.IGNORECASE).strip()
     cleaned = re.sub(r"^minni[,!\s]+", "", cleaned, flags=re.IGNORECASE).strip()
     return cleaned if cleaned else message.strip()
+
+
+def clean_voice_text(text: str) -> str:
+    """Removes markdown formatting characters to produce a clean plain-text string for robot hardware Text-to-Speech (TTS) engines."""
+    clean = re.sub(r"\*+", "", text)
+    clean = re.sub(r"#+\s*", "", clean)
+    clean = re.sub(r"`+", "", clean)
+    clean = re.sub(r"\[(.*?)\]\(.*?\)", r"\1", clean)
+    clean = re.sub(r"\n+", " ", clean)
+    return clean.strip()
 
 
 @router.post(
     "/chat",
     response_model=ChatResponse,
     status_code=status.HTTP_200_OK,
-    summary="Minni Text Chat Endpoint",
-    description="Processes text transcribed from user speech or text input and generates Minni safety response."
+    summary="Minni ChatGPT-Style Text/Speech Endpoint for Hardware",
+    description=(
+        "Main API endpoint for robot hardware.\n\n"
+        "- Receives input transcribed from robot microphone after wake-word 'Hey Minni' is detected.\n"
+        "- Automatically cleans leading wake words ('Hey Minni', 'Hi Minni').\n"
+        "- Evaluates input through Safety Layer and generates ChatGPT-style conversational responses.\n"
+        "- Returns `response` (formatted text) and `voice_text` (clean plain-text for robot TTS speakers)."
+    )
 )
 async def chat_endpoint(payload: ChatRequest) -> ChatResponse:
-    """Processes user text input and generates Minni safety response."""
+    """Processes user text input from robot microphone and generates ChatGPT-style Minni safety response."""
     try:
         raw_message = payload.message.strip()
         user_message = strip_wake_word(raw_message)
@@ -42,6 +58,7 @@ async def chat_endpoint(payload: ChatRequest) -> ChatResponse:
         if risk_level == "HIGH_RISK" and emergency_response:
             action_taken = "predefined_emergency_override"
             response_text = emergency_response
+            voice_txt = clean_voice_text(response_text)
             helpline_info = safety_service.HELPLINE_SUMMARY
 
             logger.warning(f"High risk trigger detected in session {session_id} [Intent: {intent}]")
@@ -49,6 +66,7 @@ async def chat_endpoint(payload: ChatRequest) -> ChatResponse:
 
             return ChatResponse(
                 response=response_text,
+                voice_text=voice_txt,
                 session_id=session_id,
                 intent=intent,
                 risk_level=risk_level,
@@ -66,10 +84,13 @@ async def chat_endpoint(payload: ChatRequest) -> ChatResponse:
             audience=audience
         )
 
+        voice_txt = clean_voice_text(response_text)
+
         session_service.add_turn(session_id, user_message, response_text)
 
         return ChatResponse(
             response=response_text,
+            voice_text=voice_txt,
             session_id=session_id,
             intent=intent,
             risk_level=risk_level,
@@ -90,21 +111,21 @@ async def chat_endpoint(payload: ChatRequest) -> ChatResponse:
     "/chat/voice",
     response_model=ChatResponse,
     status_code=status.HTTP_200_OK,
-    summary="Minni Voice Audio File Input Endpoint",
-    description="Accepts an audio file upload (.wav, .mp3, .ogg, .webm, .m4a) from the robot or client, processes it natively through Gemini multimodal AI, and returns Minni's response."
+    summary="Minni Hardware Audio Recording Endpoint",
+    description="Accepts an audio file upload (.wav, .mp3, .ogg, .webm, .m4a) recorded directly from hardware microphone, processes it natively through Gemini multimodal AI, and returns Minni's response."
 )
 async def chat_voice_endpoint(
-    audio_file: UploadFile = File(..., description="Audio file recording (.wav, .mp3, .ogg, .webm, .m4a)"),
+    audio_file: UploadFile = File(..., description="Audio file recording from hardware microphone (.wav, .mp3, .ogg, .webm, .m4a)"),
     session_id: Optional[str] = Form(None, description="Optional session ID"),
     audience: Optional[str] = Form("general", description="Target audience: 'child', 'woman', or 'general'")
 ) -> ChatResponse:
-    """Processes uploaded voice audio file directly and generates Minni safety response."""
+    """Processes uploaded hardware microphone audio file directly and generates ChatGPT-style Minni response."""
     try:
         audio_bytes = await audio_file.read()
         if not audio_bytes:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Empty audio file uploaded."
+                detail="Empty audio file uploaded from hardware."
             )
 
         mime_type = audio_file.content_type or "audio/wav"
@@ -120,11 +141,13 @@ async def chat_voice_endpoint(
             audience=aud
         )
 
-        # Store turn in session history
-        session_service.add_turn(sid, "[Voice Audio Input]", response_text)
+        voice_txt = clean_voice_text(response_text)
+
+        session_service.add_turn(sid, "[Hardware Voice Audio Input]", response_text)
 
         return ChatResponse(
             response=response_text,
+            voice_text=voice_txt,
             session_id=sid,
             intent="voice_audio_input",
             risk_level="SAFE",
@@ -139,7 +162,7 @@ async def chat_voice_endpoint(
         logger.error(f"Error in voice chat endpoint: {e}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="An error occurred while processing the audio input."
+            detail="An error occurred while processing the hardware audio input."
         )
 
 

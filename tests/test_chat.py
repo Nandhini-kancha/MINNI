@@ -15,7 +15,8 @@ def test_post_chat_normal_query():
     assert response.status_code == 200
     data = response.json()
     assert "response" in data
-    assert len(data["response"]) > 0
+    assert "voice_text" in data
+    assert len(data["voice_text"]) > 0
     assert "session_id" in data
     assert data["intent"] == "body_safety"
     assert data["risk_level"] in ["SAFE", "SENSITIVE"]
@@ -26,13 +27,14 @@ def test_post_chat_normal_query():
 def test_post_chat_wake_word_stripping():
     """Test POST /api/chat strips 'Hey Minni' wake word prefix from robot input."""
     payload = {
-        "message": "Hey Minni, what is a bad touch?",
+        "message": "Hey Minni, explain about safe touch",
         "audience": "child"
     }
     response = client.post("/api/chat", json=payload)
     assert response.status_code == 200
     data = response.json()
     assert data["intent"] == "body_safety"
+    assert "voice_text" in data
 
 
 def test_post_chat_voice_audio_upload():
@@ -45,6 +47,7 @@ def test_post_chat_voice_audio_upload():
     assert response.status_code == 200
     data = response.json()
     assert "response" in data
+    assert "voice_text" in data
     assert "session_id" in data
     assert data["intent"] == "voice_audio_input"
     assert data["action_taken"] == "multimodal_audio_response"
@@ -63,6 +66,7 @@ def test_post_chat_high_risk_emergency_query():
     assert data["risk_level"] == "HIGH_RISK"
     assert data["flagged"] is True
     assert data["action_taken"] == "predefined_emergency_override"
+    assert "voice_text" in data
     assert "1098" in data["response"] or "112" in data["response"]
     assert data["helpline_info"] is not None
 
