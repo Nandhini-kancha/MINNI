@@ -5,6 +5,20 @@ from app.main import app
 client = TestClient(app)
 
 
+def test_post_chat_standalone_wake_word_greeting():
+    """Test POST /api/chat with standalone 'Hey Minni' greeting."""
+    payload = {
+        "message": "Hey Minni",
+        "audience": "child"
+    }
+    response = client.post("/api/chat", json=payload)
+    assert response.status_code == 200
+    data = response.json()
+    assert data["intent"] == "greeting"
+    assert "Hello" in data["response"] or "Minni" in data["response"]
+    assert "voice_text" in data
+
+
 def test_post_chat_normal_query():
     """Test POST /api/chat with a normal safety question."""
     payload = {

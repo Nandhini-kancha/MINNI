@@ -67,7 +67,9 @@ class SafetyService:
     ]
 
     GREETING_PATTERNS = [
-        r"^(hi|hello|hey|hey minni|good morning|good afternoon|good evening|who are you|what can you do|నమస్కారం|హలో|హాయ్)$"
+        r"\b(hi|hello|hey|greetings|good morning|good afternoon|good evening|who are you|hey minni|hi minni|hello minni|ok minni)\b",
+        r"(నమస్కారం|హలో|హాయ్|నమస్తే)",
+        r"\b(namaskaram|namaste|hello|hi|hey)\b",
     ]
 
     # High Risk Predefined Emergency Responses (Bilingual: English + Telugu)

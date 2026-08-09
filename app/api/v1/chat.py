@@ -12,11 +12,15 @@ router = APIRouter(tags=["Chatbot"])
 
 
 def strip_wake_word(message: str) -> str:
-    """Strips leading wake words ('Hey Minni', 'Hi Minni', 'Hello Minni', 'OK Minni', 'Minni,') from transcribed robot hardware speech."""
+    """Strips leading wake words ('Hey Minni', 'Hi Minni', 'Hello Minni', 'OK Minni', 'Minni,') from transcribed robot hardware speech, preserving standalone greetings."""
     cleaned = message.strip()
+    # If the user just said "Hey Minni", "Hi Minni", "Hello Minni", keep it so it triggers the friendly greeting response!
+    if re.match(r"^(hey|hi|hello|ok)\s+minni[!.,\s]*$", cleaned, flags=re.IGNORECASE):
+        return cleaned
     cleaned = re.sub(r"^(hey|hi|hello|ok)\s+minni[,!\s]*", "", cleaned, flags=re.IGNORECASE).strip()
     cleaned = re.sub(r"^minni[,!\s]+", "", cleaned, flags=re.IGNORECASE).strip()
     return cleaned if cleaned else message.strip()
+
 
 
 def clean_voice_text(text: str) -> str:
