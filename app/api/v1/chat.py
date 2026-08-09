@@ -1,7 +1,7 @@
 import re
 import logging
 from typing import Optional
-from fastapi import APIRouter, HTTPException, UploadFile, File, Form, status
+from fastapi import APIRouter, HTTPException, Request, UploadFile, File, Form, Query, status
 from app.schemas.chat import ChatRequest, ChatResponse
 from app.services.safety_service import safety_service
 from app.services.session_service import session_service
@@ -111,26 +111,56 @@ async def chat_endpoint(payload: ChatRequest) -> ChatResponse:
     "/chat/voice",
     response_model=ChatResponse,
     status_code=status.HTTP_200_OK,
-    summary="Minni Hardware Audio Recording Endpoint",
-    description="Accepts an audio file upload (.wav, .mp3, .ogg, .webm, .m4a) recorded directly from hardware microphone, processes it natively through Gemini multimodal AI, and returns Minni's response."
+    summary="Minni Hardware Direct Voice Endpoint",
+    description=(
+        "Accepts DIRECT voice audio bytes directly in the HTTP request body "
+        "(Content-Type: audio/wav, audio/pcm, audio/webm, audio/raw, application/octet-stream) "
+        "OR multipart form file uploads from robot hardware microphone."
+    )
 )
 async def chat_voice_endpoint(
-    audio_file: UploadFile = File(..., description="Audio file recording from hardware microphone (.wav, .mp3, .ogg, .webm, .m4a)"),
-    session_id: Optional[str] = Form(None, description="Optional session ID"),
-    audience: Optional[str] = Form("general", description="Target audience: 'child', 'woman', or 'general'")
+    request: Request,
+    audio_file: Optional[UploadFile] = File(None, description="Audio file upload (optional if sending raw bytes in request body)"),
+    session_id: Optional[str] = Query(None, description="Optional session ID in query or form"),
+    audience: Optional[str] = Query("general", description="Target audience: 'child', 'woman', or 'general'")
 ) -> ChatResponse:
-    """Processes uploaded hardware microphone audio file directly and generates ChatGPT-style Minni response."""
+    """Processes direct raw voice bytes or file upload from robot hardware microphone."""
     try:
-        audio_bytes = await audio_file.read()
+        content_type = request.headers.get("content-type", "").lower()
+        audio_bytes = b""
+        mime_type = "audio/wav"
+
+        # Case 1: Direct raw audio byte stream in HTTP request body from robot mic
+        if any(ct in content_type for ct in ["audio/", "application/octet-stream", "audio/pcm", "audio/raw"]):
+            audio_bytes = await request.body()
+            mime_type = content_type if "audio/" in content_type else "audio/wav"
+
+        # Case 2: Multipart form file upload
+        elif audio_file is not None:
+            audio_bytes = await audio_file.read()
+            mime_type = audio_file.content_type or "audio/wav"
+
+        # Case 3: Fallback check body
+        else:
+            audio_bytes = await request.body()
+            if not audio_bytes:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="No voice audio bytes or file received from hardware."
+                )
+
         if not audio_bytes:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Empty audio file uploaded from hardware."
+                detail="Empty voice audio bytes received from robot hardware microphone."
             )
 
-        mime_type = audio_file.content_type or "audio/wav"
-        sid = session_service.get_or_create_session_id(session_id)
-        aud = audience or "general"
+        # Check session_id / audience from headers if not in query
+        header_sid = request.headers.get("x-session-id")
+        header_aud = request.headers.get("x-audience")
+
+        sid = session_service.get_or_create_session_id(session_id or header_sid)
+        aud = audience or header_aud or "general"
 
         session_history = session_service.get_history(sid)
 
@@ -143,7 +173,7 @@ async def chat_voice_endpoint(
 
         voice_txt = clean_voice_text(response_text)
 
-        session_service.add_turn(sid, "[Hardware Voice Audio Input]", response_text)
+        session_service.add_turn(sid, "[Direct Hardware Mic Voice]", response_text)
 
         return ChatResponse(
             response=response_text,
@@ -159,10 +189,10 @@ async def chat_voice_endpoint(
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Error in voice chat endpoint: {e}", exc_info=True)
+        logger.error(f"Error in direct voice chat endpoint: {e}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="An error occurred while processing the hardware audio input."
+            detail="An error occurred while processing the hardware voice input."
         )
 
 

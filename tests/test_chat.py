@@ -37,6 +37,21 @@ def test_post_chat_wake_word_stripping():
     assert "voice_text" in data
 
 
+def test_post_chat_direct_raw_voice_bytes():
+    """Test POST /api/chat/voice with direct raw voice audio stream bytes in request body."""
+    raw_voice_bytes = b"RIFF....WAVEfmt ....data...."
+    headers = {"Content-Type": "audio/wav", "X-Audience": "child"}
+    
+    response = client.post("/api/chat/voice", content=raw_voice_bytes, headers=headers)
+    assert response.status_code == 200
+    data = response.json()
+    assert "response" in data
+    assert "voice_text" in data
+    assert "session_id" in data
+    assert data["intent"] == "voice_audio_input"
+    assert data["action_taken"] == "multimodal_audio_response"
+
+
 def test_post_chat_voice_audio_upload():
     """Test POST /api/chat/voice with dummy audio file upload."""
     dummy_audio_bytes = b"RIFF....WAVEfmt ....data...."
